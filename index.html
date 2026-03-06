@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Niksang — Quotation System</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink:     #0f1923;
+    --paper:   #f7f4ef;
+    --cream:   #ede9e0;
+    --rule:    #d4cfc4;
+    --accent:  #c84b2f;
+    --accent2: #1a5c8a;
+    --gold:    #b8922a;
+    --muted:   #7a7368;
+    --white:   #ffffff;
+    --success: #2d6a4f;
+    --shadow:  0 2px 12px rgba(15,25,35,.10);
+    --shadow-lg: 0 8px 40px rgba(15,25,35,.16);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    color: var(--paper);
+    letter-spacing: .04em;
+  }
+  .logo span { color: var(--gold); }
+  .header-meta { color: var(--rule); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
+
+  /* ── IMPORT ── */
+  .import-btn {
+    display: flex; align-items: center; gap: .5rem;
+    padding: .4rem 1rem; border-radius: 6px;
+    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+    color: var(--paper); font-family: inherit; font-size: .82rem;
+    font-weight: 500; cursor: pointer; transition: all .15s;
+  }
+  .import-btn:hover { background: rgba(255,255,255,.2); }
+
+  .import-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(15,25,35,.6); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .import-overlay.open { display: flex; }
+  .import-modal {
+    background: var(--white); border-radius: 14px;
+    padding: 2rem; width: 480px; max-width: 95vw;
+    box-shadow: var(--shadow-lg);
+    animation: popIn .2s ease;
+  }
+  @keyframes popIn { from { transform: scale(.95); opacity:0; } to { transform: scale(1); opacity:1; } }
+  .modal-title {
+    font-family: 'DM Serif Display', serif; font-size: 1.4rem;
+    margin-bottom: .3rem;
+  }
+  .modal-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+
+  .drop-zone {
+    border: 2.5px dashed var(--rule); border-radius: 10px;
+    padding: 2.5rem 1.5rem; text-align: center; cursor: pointer;
+    transition: all .15s; background: var(--paper);
+  }
+  .drop-zone:hover, .drop-zone.dragover {
+    border-color: var(--accent2); background: #eef5fb;
+  }
+  .drop-icon { font-size: 2.2rem; margin-bottom: .5rem; }
+  .drop-text { font-size: .9rem; color: var(--muted); }
+  .drop-text strong { color: var(--accent2); }
+  .drop-input { display: none; }
+
+  .col-map {
+    margin-top: 1.25rem; background: var(--cream); border-radius: 8px;
+    padding: 1rem; font-size: .82rem; color: var(--muted); line-height: 1.8;
+    display: none;
+  }
+  .col-map.visible { display: block; }
+  .col-map strong { color: var(--ink); }
+
+  .import-status {
+    margin-top: 1rem; padding: .75rem 1rem; border-radius: 8px;
+    font-size: .85rem; display: none;
+  }
+  .import-status.ok  { background: #eafaf1; color: var(--success); display: block; }
+  .import-status.err { background: #fdf2f1; color: var(--accent);  display: block; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1.5rem; }
+
+  /* ── LAYOUT ── */
+  .app { display: grid; grid-template-columns: 420px 1fr; min-height: calc(100vh - 64px); }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--white);
+    border-right: 1px solid var(--rule);
+    display: flex; flex-direction: column;
+    height: calc(100vh - 64px);
+    position: sticky; top: 64px;
+    overflow: hidden;
+  }
+
+  .panel-section {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--cream);
+  }
+  .panel-label {
+    font-size: .7rem; font-weight: 600; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: .6rem;
+  }
+
+  /* Customer block */
+  .customer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+  .field-group { display: flex; flex-direction: column; gap: .3rem; }
+  .field-group.full { grid-column: 1/-1; }
+  .field-group label { font-size: .72rem; font-weight: 500; color: var(--muted); }
+  .field-group input, .field-group select {
+    border: 1.5px solid var(--rule); border-radius: 6px;
+    padding: .45rem .7rem; font-family: inherit; font-size: .88rem;
+    background: var(--paper); color: var(--ink);
+    transition: border-color .15s;
+    width: 100%;
+  }
+  .field-group input:focus, .field-group select:focus {
+    outline: none; border-color: var(--accent2);
+  }
+  select { cursor: pointer; }
+
+  /* Search */
+  .search-wrap { position: relative; }
+  .search-wrap input {
+    width: 100%; border: 2px solid var(--rule); border-radius: 8px;
+    padding: .65rem 1rem .65rem 2.6rem;
+    font-family: inherit; font-size: .92rem; background: var(--paper);
+    transition: border-color .15s;
+  }
+  .search-wrap input:focus { outline: none; border-color: var(--accent); }
+  .search-icon {
+    position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 1rem; pointer-events: none;
+  }
+  .search-count {
+    position: absolute; right: .85rem; top: 50%; transform: translateY(-50%);
+    font-size: .72rem; color: var(--muted); font-weight: 500;
+  }
+
+  /* Product list */
+  .product-list {
+    flex: 1; overflow-y: auto;
+    padding: .5rem;
+  }
+  .product-list::-webkit-scrollbar { width: 5px; }
+  .product-list::-webkit-scrollbar-track { background: transparent; }
+  .product-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+  .product-card {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .7rem .9rem; border-radius: 8px; cursor: pointer;
+    transition: background .12s, transform .1s;
+    border: 1px solid transparent;
+    margin-bottom: .3rem;
+  }
+  .product-card:hover { background: var(--cream); border-color: var(--rule); transform: translateX(2px); }
+  .product-card:active { transform: translateX(0); }
+  .product-card .pname { font-size: .88rem; font-weight: 500; color: var(--ink); }
+  .product-card .pmeta { font-size: .74rem; color: var(--muted); margin-top: .1rem; }
+  .product-card .pprice {
+    font-size: .9rem; font-weight: 600; color: var(--accent2);
+    white-space: nowrap; margin-left: .75rem;
+  }
+  .product-card .ptag {
+    display: inline-block; font-size: .65rem; font-weight: 600; padding: .15rem .4rem;
+    border-radius: 3px; margin-right: .3rem;
+    background: var(--cream); color: var(--muted); letter-spacing: .05em;
+  }
+  .add-btn {
+    width: 28px; height: 28px; border-radius: 50%; border: none;
+    background: var(--accent); color: white; font-size: 1.1rem; line-height: 1;
+    cursor: pointer; flex-shrink: 0; margin-left: .5rem;
+    transition: background .15s, transform .1s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .add-btn:hover { background: #a83a20; transform: scale(1.1); }
+
+  .no-results {
+    text-align: center; padding: 2rem 1rem; color: var(--muted);
+    font-size: .9rem;
+  }
+  .no-results .nr-icon { font-size: 2rem; margin-bottom: .5rem; }
+
+  /* Category filter pills */
+  .pill-wrap { display: flex; gap: .4rem; flex-wrap: wrap; }
+  .pill {
+    padding: .3rem .75rem; border-radius: 20px; font-size: .75rem;
+    font-weight: 500; border: 1.5px solid var(--rule);
+    background: transparent; color: var(--muted);
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .pill.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel { padding: 2rem; overflow-y: auto; }
+
+  /* Quote header */
+  .quote-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .quote-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem; color: var(--ink);
+  }
+  .quote-title span { color: var(--accent); font-style: italic; }
+  .quote-actions { display: flex; gap: .6rem; }
+  .btn {
+    padding: .55rem 1.2rem; border-radius: 7px; font-family: inherit;
+    font-size: .85rem; font-weight: 500; cursor: pointer;
+    border: none; transition: all .15s;
+  }
+  .btn-outline { background: transparent; border: 1.5px solid var(--rule); color: var(--ink); }
+  .btn-outline:hover { border-color: var(--ink); }
+  .btn-primary { background: var(--ink); color: var(--white); }
+  .btn-primary:hover { background: #1e2d3d; }
+  .btn-accent { background: var(--accent); color: var(--white); }
+  .btn-accent:hover { background: #a83a20; }
+
+  /* Quote meta bar */
+  .quote-meta-bar {
+    background: var(--white); border-radius: 10px;
+    border: 1px solid var(--rule); padding: 1rem 1.25rem;
+    display: flex; gap: 2rem; margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .qmeta-item { display: flex; flex-direction: column; gap: .2rem; }
+  .qmeta-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+  .qmeta-val { font-size: .92rem; font-weight: 600; color: var(--ink); }
+
+  /* Line items table */
+  .quote-table-wrap {
+    background: var(--white); border-radius: 10px;
+    border: 1px solid var(--rule); overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .quote-table {
+    width: 100%; border-collapse: collapse;
+  }
+  .quote-table thead th {
+    background: var(--ink); color: var(--white);
+    font-size: .72rem; font-weight: 600; letter-spacing: .08em;
+    text-transform: uppercase; padding: .8rem 1rem;
+    text-align: left;
+  }
+  .quote-table thead th:last-child { text-align: right; }
+  .quote-table tbody tr {
+    border-bottom: 1px solid var(--cream);
+    transition: background .1s;
+  }
+  .quote-table tbody tr:last-child { border-bottom: none; }
+  .quote-table tbody tr:hover { background: var(--paper); }
+  .quote-table td { padding: .75rem 1rem; font-size: .88rem; vertical-align: middle; }
+  .quote-table td:last-child { text-align: right; }
+
+  .item-name { font-weight: 500; }
+  .item-meta { font-size: .74rem; color: var(--muted); margin-top: .1rem; }
+  .gst-badge {
+    display: inline-block; font-size: .65rem; font-weight: 700;
+    padding: .1rem .35rem; border-radius: 3px;
+    background: #e8f4f8; color: var(--accent2);
+  }
+
+  .qty-ctrl {
+    display: flex; align-items: center; gap: .4rem;
+  }
+  .qty-btn {
+    width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--rule);
+    background: var(--paper); color: var(--ink); font-size: .9rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all .12s;
+  }
+  .qty-btn:hover { background: var(--cream); border-color: var(--ink); }
+  .qty-input {
+    width: 46px; text-align: center; border: 1px solid var(--rule);
+    border-radius: 4px; padding: .2rem; font-size: .88rem;
+    font-family: inherit; background: var(--paper);
+  }
+  .qty-input:focus { outline: none; border-color: var(--accent2); }
+
+  .disc-input {
+    width: 52px; text-align: center; border: 1px solid var(--rule);
+    border-radius: 4px; padding: .2rem; font-size: .82rem;
+    font-family: inherit; background: var(--paper);
+  }
+  .disc-input:focus { outline: none; border-color: var(--accent); }
+
+  .del-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--rule); font-size: 1.1rem; transition: color .12s;
+    padding: .2rem;
+  }
+  .del-btn:hover { color: var(--accent); }
+
+  .empty-quote {
+    text-align: center; padding: 3.5rem 2rem; color: var(--muted);
+  }
+  .empty-quote .eq-icon { font-size: 3rem; margin-bottom: .75rem; opacity: .4; }
+  .empty-quote p { font-size: .92rem; }
+  .empty-quote small { font-size: .8rem; opacity: .7; }
+
+  /* Totals */
+  .totals-grid {
+    background: var(--white); border-radius: 10px;
+    border: 1px solid var(--rule); overflow: hidden;
+  }
+  .tot-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .75rem 1.25rem;
+    border-bottom: 1px solid var(--cream);
+  }
+  .tot-row:last-child { border-bottom: none; }
+  .tot-row.grand {
+    background: var(--ink); color: var(--white);
+    padding: 1rem 1.25rem;
+  }
+  .tot-label { font-size: .88rem; color: var(--muted); }
+  .tot-val { font-size: .92rem; font-weight: 600; }
+  .tot-row.grand .tot-label { color: rgba(255,255,255,.7); font-size: .9rem; }
+  .tot-row.grand .tot-val { color: var(--white); font-size: 1.2rem; font-weight: 700; }
+
+  /* Overall discount row */
+  .disc-row {
+    display: flex; align-items: center; gap: .5rem;
+  }
+  .disc-row input {
+    width: 58px; border: 1px solid var(--rule); border-radius: 4px;
+    padding: .25rem .4rem; font-size: .85rem; text-align: center;
+    font-family: inherit; background: var(--paper);
+  }
+  .disc-row input:focus { outline: none; border-color: var(--accent); }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    header, .left-panel, .quote-actions, .qty-ctrl, .disc-input, .del-btn { display: none !important; }
+    .app { display: block; }
+    .right-panel { padding: 0; }
+    .quote-table-wrap, .totals-grid { box-shadow: none; border: 1px solid #ccc; }
+    body { background: white; font-size: 12px; }
+    .print-header { display: block !important; }
+  }
+  .print-header { display: none; }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 1.5rem; right: 1.5rem;
+    background: var(--success); color: white;
+    padding: .65rem 1.2rem; border-radius: 8px;
+    font-size: .85rem; font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    opacity: 0; transform: translateY(10px);
+    transition: all .2s; pointer-events: none; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .left-panel { height: auto; position: static; max-height: 50vh; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Nik<span>sang</span></div>
+  <div style="display:flex;align-items:center;gap:1rem">
+    <div class="header-meta">Quotation System</div>
+    <button class="import-btn" onclick="openImport()">&#128229; Import Price List</button>
+  </div>
+</header>
+
+<!-- Import Modal -->
+<div class="import-overlay" id="importOverlay">
+  <div class="import-modal">
+    <div class="modal-title">Import Price List</div>
+    <div class="modal-sub">
+      Upload your <strong>Niksang_Quotation_Tool.xlsx</strong> file.<br>
+      The app reads the <em>Price List</em> sheet automatically and replaces the current product list.
+    </div>
+    <div class="drop-zone" id="dropZone"
+         onclick="document.getElementById('fileInput').click()"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div class="drop-icon">&#128202;</div>
+      <div class="drop-text"><strong>Click to browse</strong> or drag &amp; drop your .xlsx here</div>
+      <input type="file" class="drop-input" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])"/>
+    </div>
+    <div class="col-map visible" id="colMap">
+      <strong>Expected columns in the Price List sheet (rows 4 onward):</strong><br>
+      Col B: Product Name &nbsp;&middot;&nbsp; Col C: Category &nbsp;&middot;&nbsp; Col D: Unit<br>
+      Col E: Retail Price &nbsp;&middot;&nbsp; Col F: Trade Price &nbsp;&middot;&nbsp; Col G: Wholesale Price<br>
+      Col H: GST Rate (5 / 12 / 18) &nbsp;&middot;&nbsp; Col I: Material/Size Option
+    </div>
+    <div class="import-status" id="importStatus"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeImport()">Cancel</button>
+      <button class="btn btn-primary" id="confirmImportBtn" onclick="confirmImport()" style="display:none">&#10003; Load Products</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- ── LEFT: Product Finder ── -->
+  <aside class="left-panel">
+
+    <!-- Customer -->
+    <div class="panel-section">
+      <div class="panel-label">Customer Details</div>
+      <div class="customer-grid">
+        <div class="field-group full">
+          <label>Customer Name</label>
+          <input type="text" id="custName" placeholder="e.g. Raj Enterprises"/>
+        </div>
+        <div class="field-group">
+          <label>Customer Type</label>
+          <select id="custType" onchange="updateQuoteMeta()">
+            <option value="retail">Retail</option>
+            <option value="trade">Trade</option>
+            <option value="wholesale">Wholesale</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Overall Disc %</label>
+          <input type="number" id="overallDisc" value="0" min="0" max="100" step="0.5"
+                 oninput="recalcTotals()" placeholder="0"/>
+        </div>
+        <div class="field-group">
+          <label>Quote No.</label>
+          <input type="text" id="quoteNo" value="QT-001"/>
+        </div>
+        <div class="field-group">
+          <label>Valid Until</label>
+          <input type="date" id="validUntil"/>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category pills -->
+    <div class="panel-section" id="catSection">
+      <div class="panel-label">Filter by Category</div>
+      <div class="pill-wrap" id="catPills"></div>
+    </div>
+
+    <!-- Search -->
+    <div class="panel-section" style="padding-bottom:.75rem">
+      <div class="panel-label">Search Products</div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="searchInput" placeholder="Type any part of product name…"
+               oninput="filterProducts()"/>
+        <span class="search-count" id="searchCount"></span>
+      </div>
+    </div>
+
+    <!-- Product list -->
+    <div class="product-list" id="productList"></div>
+  </aside>
+
+  <!-- ── RIGHT: Quote ── -->
+  <main class="right-panel">
+
+    <div class="quote-header">
+      <div>
+        <div class="quote-title">Your <span>Quotation</span></div>
+      </div>
+      <div class="quote-actions">
+        <button class="btn btn-outline" onclick="clearQuote()">Clear</button>
+        <button class="btn btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="quote-meta-bar">
+      <div class="qmeta-item">
+        <span class="qmeta-label">Quote No.</span>
+        <span class="qmeta-val" id="metaQuoteNo">QT-001</span>
+      </div>
+      <div class="qmeta-item">
+        <span class="qmeta-label">Date</span>
+        <span class="qmeta-val" id="metaDate">—</span>
+      </div>
+      <div class="qmeta-item">
+        <span class="qmeta-label">Valid Until</span>
+        <span class="qmeta-val" id="metaValid">—</span>
+      </div>
+      <div class="qmeta-item">
+        <span class="qmeta-label">Customer</span>
+        <span class="qmeta-val" id="metaCust">—</span>
+      </div>
+      <div class="qmeta-item">
+        <span class="qmeta-label">Pricing Tier</span>
+        <span class="qmeta-val" id="metaTier">Retail</span>
+      </div>
+      <div class="qmeta-item">
+        <span class="qmeta-label">Items</span>
+        <span class="qmeta-val" id="metaItems">0</span>
+      </div>
+    </div>
+
+    <div class="quote-table-wrap">
+      <table class="quote-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Product / Service</th>
+            <th>Qty</th>
+            <th>Unit Price</th>
+            <th>Line Disc %</th>
+            <th>Amount</th>
+            <th>GST</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="quoteBody">
+          <tr id="emptyRow">
+            <td colspan="9">
+              <div class="empty-quote">
+                <div class="eq-icon">📋</div>
+                <p>No items added yet</p>
+                <small>Search and click a product on the left to add it</small>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="totals-grid">
+      <div class="tot-row">
+        <span class="tot-label">Subtotal (excl. GST)</span>
+        <span class="tot-val" id="totSubtotal">₹ 0.00</span>
+      </div>
+      <div class="tot-row">
+        <span class="tot-label">
+          <div class="disc-row">
+            Overall Discount
+            <span style="font-size:.8rem;color:var(--muted)">applied on subtotal</span>
+          </div>
+        </span>
+        <span class="tot-val" id="totDiscount" style="color:var(--accent)">- ₹ 0.00</span>
+      </div>
+      <div class="tot-row">
+        <span class="tot-label">Total GST</span>
+        <span class="tot-val" id="totGST">₹ 0.00</span>
+      </div>
+      <div class="tot-row grand">
+        <span class="tot-label">Grand Total (incl. GST)</span>
+        <span class="tot-val" id="totGrand">₹ 0.00</span>
+      </div>
+    </div>
+
+    <div style="margin-top:1.25rem;padding:1rem 1.25rem;background:var(--cream);border-radius:8px;font-size:.8rem;color:var(--muted);line-height:1.6">
+      <strong style="color:var(--ink)">Terms & Conditions:</strong>
+      This quotation is valid for 30 days from the date of issue. Prices are subject to change after the validity period.
+      50% advance payment required to confirm the order. GST charged as per government regulations.
+      All disputes subject to local jurisdiction.
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SAMPLE PRODUCT DATA (replace / extend with your real products) ──
+// Format: { name, category, unit, retail, trade, wholesale, gst, option }
+const PRODUCTS = [
+  { name:"Product A",        category:"Products",  unit:"Piece", retail:100,  trade:85,   wholesale:70,  gst:18, option:"Standard" },
+  { name:"Product B",        category:"Products",  unit:"Piece", retail:200,  trade:170,  wholesale:140, gst:12, option:"Large" },
+  { name:"Product B (Small)",category:"Products",  unit:"Piece", retail:120,  trade:102,  wholesale:84,  gst:12, option:"Small" },
+  { name:"Product C",        category:"Products",  unit:"Box",   retail:350,  trade:297,  wholesale:245, gst:18, option:"" },
+  { name:"Product D",        category:"Products",  unit:"Piece", retail:75,   trade:64,   wholesale:53,  gst:12, option:"" },
+  { name:"Service A",        category:"Services",  unit:"Hour",  retail:500,  trade:450,  wholesale:400, gst:5,  option:"" },
+  { name:"Service B",        category:"Services",  unit:"Visit", retail:800,  trade:720,  wholesale:650, gst:5,  option:"" },
+  { name:"Service C",        category:"Services",  unit:"Day",   retail:3500, trade:3150, wholesale:2800,gst:5,  option:"" },
+  { name:"Material X",       category:"Materials", unit:"Kg",    retail:50,   trade:42,   wholesale:35,  gst:18, option:"Grade A" },
+  { name:"Material X (B)",   category:"Materials", unit:"Kg",    retail:40,   trade:34,   wholesale:28,  gst:18, option:"Grade B" },
+  { name:"Material Y",       category:"Materials", unit:"Litre", retail:90,   trade:77,   wholesale:63,  gst:12, option:"" },
+  { name:"Material Z",       category:"Materials", unit:"Metre", retail:120,  trade:102,  wholesale:84,  gst:18, option:"" },
+  // ↑ Add your 250-300 products here in the same format
+];
+
+// ── STATE ──
+let quoteItems = [];
+let activeCategory = "All";
+let quoteCounter = 0;
+
+// ── INIT ──
+function init() {
+  // Set today's date and default valid until
+  const today = new Date();
+  const validDate = new Date(today); validDate.setDate(validDate.getDate() + 30);
+  document.getElementById("validUntil").value = validDate.toISOString().split("T")[0];
+  document.getElementById("metaDate").textContent = formatDate(today);
+  document.getElementById("metaValid").textContent = formatDate(validDate);
+
+  buildCategoryPills();
+  filterProducts();
+  updateQuoteMeta();
+
+  // Live update quote meta
+  document.getElementById("custName").addEventListener("input", updateQuoteMeta);
+  document.getElementById("quoteNo").addEventListener("input", updateQuoteMeta);
+  document.getElementById("validUntil").addEventListener("input", updateQuoteMeta);
+  document.getElementById("custType").addEventListener("change", () => {
+    updateQuoteMeta();
+    refreshQuotePrices();
+  });
+}
+
+function formatDate(d) {
+  return d.toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
+}
+function fmt(n) {
+  return "₹ " + Number(n).toLocaleString("en-IN", { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+// ── CATEGORIES ──
+function buildCategoryPills() {
+  const cats = ["All", ...new Set(PRODUCTS.map(p => p.category))];
+  const wrap = document.getElementById("catPills");
+  wrap.innerHTML = cats.map(c =>
+    `<button class="pill ${c==="All"?"active":""}" onclick="setCategory('${c}')">${c}</button>`
+  ).join("");
+}
+
+function setCategory(cat) {
+  activeCategory = cat;
+  document.querySelectorAll(".pill").forEach(p => {
+    p.classList.toggle("active", p.textContent === cat);
+  });
+  filterProducts();
+}
+
+// ── SEARCH / FILTER ──
+function filterProducts() {
+  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const tier = document.getElementById("custType").value;
+
+  let results = PRODUCTS.filter(p => {
+    const matchCat = activeCategory === "All" || p.category === activeCategory;
+    const matchQ   = !q || p.name.toLowerCase().includes(q) ||
+                     p.category.toLowerCase().includes(q) ||
+                     (p.option && p.option.toLowerCase().includes(q));
+    return matchCat && matchQ;
+  });
+
+  document.getElementById("searchCount").textContent =
+    results.length < PRODUCTS.length ? `${results.length} found` : "";
+
+  const list = document.getElementById("productList");
+  if (results.length === 0) {
+    list.innerHTML = `<div class="no-results"><div class="nr-icon">🔍</div>No products match "<strong>${q}</strong>"</div>`;
+    return;
+  }
+
+  list.innerHTML = results.map(p => {
+    const price = p[tier];
+    return `
+      <div class="product-card" onclick='addProduct(${JSON.stringify(p)})'>
+        <div style="flex:1;min-width:0">
+          <div class="pname">${highlight(p.name, q)}</div>
+          <div class="pmeta">
+            <span class="ptag">${p.category}</span>
+            <span class="ptag">GST ${p.gst}%</span>
+            ${p.option ? `<span class="ptag">${p.option}</span>` : ""}
+            ${p.unit}
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
+          <span class="pprice">${fmt(price)}</span>
+          <button class="add-btn" title="Add to quote">+</button>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+function highlight(text, q) {
+  if (!q) return text;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")})`, "gi");
+  return text.replace(re, `<mark style="background:#fff3cd;border-radius:2px">$1</mark>`);
+}
+
+// ── ADD PRODUCT ──
+function addProduct(p) {
+  quoteCounter++;
+  const tier = document.getElementById("custType").value;
+  quoteItems.push({
+    id: quoteCounter,
+    name: p.name,
+    category: p.category,
+    unit: p.unit,
+    gst: p.gst,
+    option: p.option,
+    prices: { retail: p.retail, trade: p.trade, wholesale: p.wholesale },
+    qty: 1,
+    disc: 0,
+  });
+  renderQuote();
+  showToast(`"${p.name}" added`);
+}
+
+// ── RENDER QUOTE TABLE ──
+function renderQuote() {
+  const tbody = document.getElementById("quoteBody");
+  const tier  = document.getElementById("custType").value;
+
+  if (quoteItems.length === 0) {
+    tbody.innerHTML = `<tr id="emptyRow"><td colspan="9">
+      <div class="empty-quote">
+        <div class="eq-icon">📋</div>
+        <p>No items added yet</p>
+        <small>Search and click a product on the left to add it</small>
+      </div></td></tr>`;
+    recalcTotals();
+    return;
+  }
+
+  tbody.innerHTML = quoteItems.map((item, idx) => {
+    const unitPrice = item.prices[tier];
+    const amount    = unitPrice * item.qty * (1 - item.disc / 100);
+    const gstAmt    = amount * item.gst / 100;
+    const total     = amount + gstAmt;
+
+    return `<tr>
+      <td style="color:var(--muted);font-size:.8rem">${idx+1}</td>
+      <td>
+        <div class="item-name">${item.name}</div>
+        <div class="item-meta">
+          ${item.category} · ${item.unit}
+          ${item.option ? ` · ${item.option}` : ""}
+        </div>
+      </td>
+      <td>
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+          <input class="qty-input" type="number" min="1" value="${item.qty}"
+                 onchange="setQty(${item.id},this.value)"/>
+          <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+        </div>
+      </td>
+      <td>${fmt(unitPrice)}</td>
+      <td>
+        <input class="disc-input" type="number" min="0" max="100" step="0.5"
+               value="${item.disc}" onchange="setDisc(${item.id},this.value)"/>%
+      </td>
+      <td>${fmt(amount)}</td>
+      <td><span class="gst-badge">${item.gst}%</span> ${fmt(gstAmt)}</td>
+      <td><strong>${fmt(total)}</strong></td>
+      <td><button class="del-btn" onclick="removeItem(${item.id})" title="Remove">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  recalcTotals();
+  document.getElementById("metaItems").textContent = quoteItems.length;
+}
+
+// ── ITEM CONTROLS ──
+function changeQty(id, delta) {
+  const item = quoteItems.find(i => i.id === id);
+  if (item) { item.qty = Math.max(1, item.qty + delta); renderQuote(); }
+}
+function setQty(id, val) {
+  const item = quoteItems.find(i => i.id === id);
+  if (item) { item.qty = Math.max(1, parseFloat(val)||1); renderQuote(); }
+}
+function setDisc(id, val) {
+  const item = quoteItems.find(i => i.id === id);
+  if (item) { item.disc = Math.min(100, Math.max(0, parseFloat(val)||0)); renderQuote(); }
+}
+function removeItem(id) {
+  quoteItems = quoteItems.filter(i => i.id !== id);
+  renderQuote();
+}
+function clearQuote() {
+  if (quoteItems.length && !confirm("Clear all items from the quote?")) return;
+  quoteItems = []; renderQuote();
+}
+
+// ── RECALC TOTALS ──
+function recalcTotals() {
+  const tier     = document.getElementById("custType").value;
+  const overDisc = parseFloat(document.getElementById("overallDisc").value) || 0;
+
+  let subtotal = 0, gstTotal = 0;
+  quoteItems.forEach(item => {
+    const up  = item.prices[tier];
+    const amt = up * item.qty * (1 - item.disc / 100);
+    subtotal += amt;
+    gstTotal += amt * item.gst / 100;
+  });
+
+  const discAmt  = subtotal * overDisc / 100;
+  const grandTotal = subtotal - discAmt + gstTotal;
+
+  document.getElementById("totSubtotal").textContent = fmt(subtotal);
+  document.getElementById("totDiscount").textContent = `- ${fmt(discAmt)}`;
+  document.getElementById("totGST").textContent      = fmt(gstTotal);
+  document.getElementById("totGrand").textContent    = fmt(grandTotal);
+}
+
+// ── REFRESH PRICES WHEN TIER CHANGES ──
+function refreshQuotePrices() {
+  renderQuote();
+  filterProducts();
+}
+
+// ── QUOTE META ──
+function updateQuoteMeta() {
+  const name  = document.getElementById("custName").value || "—";
+  const qno   = document.getElementById("quoteNo").value  || "—";
+  const valid = document.getElementById("validUntil").value;
+  const tier  = document.getElementById("custType");
+  const tierLabel = tier.options[tier.selectedIndex].text;
+
+  document.getElementById("metaCust").textContent    = name;
+  document.getElementById("metaQuoteNo").textContent = qno;
+  document.getElementById("metaTier").textContent    = tierLabel;
+  if (valid) {
+    document.getElementById("metaValid").textContent = formatDate(new Date(valid + "T00:00:00"));
+  }
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = "✓ " + msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+// ── IMPORT LOGIC ──
+let pendingProducts = null;
+
+function openImport() {
+  document.getElementById("importOverlay").classList.add("open");
+  document.getElementById("importStatus").className = "import-status";
+  document.getElementById("importStatus").textContent = "";
+  document.getElementById("confirmImportBtn").style.display = "none";
+  document.getElementById("fileInput").value = "";
+  pendingProducts = null;
+}
+function closeImport() {
+  document.getElementById("importOverlay").classList.remove("open");
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById("dropZone").classList.add("dragover");
+}
+function onDragLeave(e) {
+  document.getElementById("dropZone").classList.remove("dragover");
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById("dropZone").classList.remove("dragover");
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const status = document.getElementById("importStatus");
+  const confirmBtn = document.getElementById("confirmImportBtn");
+
+  if (!file.name.match(/\.xlsx?$/i)) {
+    status.className = "import-status err";
+    status.textContent = "Please upload a valid .xlsx file.";
+    confirmBtn.style.display = "none";
+    return;
+  }
+
+  status.className = "import-status";
+  status.textContent = "Reading file...";
+  status.style.display = "block";
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb   = XLSX.read(data, { type: "array" });
+
+      // Find "Price List" sheet (case-insensitive)
+      const sheetName = wb.SheetNames.find(n => n.toLowerCase().replace(/\s/g,"") === "pricelist");
+      if (!sheetName) {
+        status.className = "import-status err";
+        status.textContent = 'Could not find a sheet named "Price List" in this file. Please use the Niksang Excel template.';
+        confirmBtn.style.display = "none";
+        return;
+      }
+
+      const ws   = wb.Sheets[sheetName];
+      // Read from row 4 (index 3), headers in row 3 ignored — we use fixed column positions
+      // Columns: B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8 (0-indexed after col A)
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, range: 3, defval: "" });
+
+      const parsed = [];
+      for (const row of rows) {
+        const name = String(row[1] || "").trim();
+        if (!name) continue; // skip empty rows
+
+        const retail    = parseFloat(row[4]) || 0;
+        const trade     = parseFloat(row[5]) || 0;
+        const wholesale = parseFloat(row[6]) || 0;
+        const gst       = parseFloat(row[7]) || 18;
+        const category  = String(row[2] || "General").trim();
+        const unit      = String(row[3] || "Piece").trim();
+        const option    = String(row[8] || "").trim();
+
+        parsed.push({ name, category, unit, retail, trade, wholesale, gst, option });
+      }
+
+      if (parsed.length === 0) {
+        status.className = "import-status err";
+        status.textContent = "No products found. Make sure your Price List sheet has data from row 4 onwards.";
+        confirmBtn.style.display = "none";
+        return;
+      }
+
+      pendingProducts = parsed;
+      status.className = "import-status ok";
+      status.textContent = `Found ${parsed.length} product(s) across ${[...new Set(parsed.map(p=>p.category))].length} categories. Click "Load Products" to apply.`;
+      confirmBtn.style.display = "inline-block";
+
+    } catch(err) {
+      status.className = "import-status err";
+      status.textContent = "Error reading file: " + err.message;
+      confirmBtn.style.display = "none";
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function confirmImport() {
+  if (!pendingProducts || pendingProducts.length === 0) return;
+
+  // Replace global PRODUCTS array
+  PRODUCTS.length = 0;
+  pendingProducts.forEach(p => PRODUCTS.push(p));
+
+  // Reset UI
+  activeCategory = "All";
+  buildCategoryPills();
+  filterProducts();
+
+  closeImport();
+  showToast(`${PRODUCTS.length} products loaded from Excel!`);
+  pendingProducts = null;
+}
+
+init();
+</script>
+</body>
+</html>
