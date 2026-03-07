@@ -7,441 +7,270 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --ink:     #0f1923;
-    --paper:   #f7f4ef;
-    --cream:   #ede9e0;
-    --rule:    #d4cfc4;
-    --accent:  #c84b2f;
-    --accent2: #1a5c8a;
-    --gold:    #b8922a;
-    --muted:   #7a7368;
-    --white:   #ffffff;
-    --success: #2d6a4f;
-    --shadow:  0 2px 12px rgba(15,25,35,.10);
-    --shadow-lg: 0 8px 40px rgba(15,25,35,.16);
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink:#0f1923; --paper:#f7f4ef; --cream:#ede9e0; --rule:#d4cfc4;
+  --accent:#c84b2f; --accent2:#1a5c8a; --gold:#b8922a; --muted:#7a7368;
+  --white:#ffffff; --success:#2d6a4f; --warn:#b8722a; --danger:#c84b2f;
+  --shadow:0 2px 12px rgba(15,25,35,.10); --shadow-lg:0 8px 40px rgba(15,25,35,.16);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-  }
+/* HEADER */
+header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--paper);letter-spacing:.04em;display:flex;align-items:center;gap:.6rem;}
+.logo span{color:var(--gold);}
+.logo-img{height:36px;width:36px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.1);display:none;}
+.logo-img.visible{display:block;}
+.header-right{display:flex;align-items:center;gap:.5rem;}
+.hbtn{display:flex;align-items:center;gap:.4rem;padding:.35rem .85rem;border-radius:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:var(--paper);font-family:inherit;font-size:.78rem;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.hbtn:hover{background:rgba(255,255,255,.22);}
+.hbtn.gold{background:rgba(184,146,42,.25);border-color:rgba(184,146,42,.5);}
 
-  /* ── HEADER ── */
-  header {
-    background: var(--ink);
-    padding: 0 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 64px;
-    position: sticky; top: 0; z-index: 100;
-  }
-  .logo {
-    font-family: 'DM Serif Display', serif;
-    font-size: 1.6rem;
-    color: var(--paper);
-    letter-spacing: .04em;
-  }
-  .logo span { color: var(--gold); }
-  .header-meta { color: var(--rule); font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
+/* SALESPERSON BADGE */
+.sp-badge{font-size:.75rem;color:var(--gold);font-weight:500;padding:.2rem .6rem;border:1px solid rgba(184,146,42,.4);border-radius:20px;}
 
-  /* ── IMPORT ── */
-  .import-btn {
-    display: flex; align-items: center; gap: .5rem;
-    padding: .4rem 1rem; border-radius: 6px;
-    background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
-    color: var(--paper); font-family: inherit; font-size: .82rem;
-    font-weight: 500; cursor: pointer; transition: all .15s;
-  }
-  .import-btn:hover { background: rgba(255,255,255,.2); }
+/* LAYOUT */
+.app{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 60px);}
 
-  .import-overlay {
-    display: none; position: fixed; inset: 0; z-index: 200;
-    background: rgba(15,25,35,.6); backdrop-filter: blur(4px);
-    align-items: center; justify-content: center;
-  }
-  .import-overlay.open { display: flex; }
-  .import-modal {
-    background: var(--white); border-radius: 14px;
-    padding: 2rem; width: 480px; max-width: 95vw;
-    box-shadow: var(--shadow-lg);
-    animation: popIn .2s ease;
-  }
-  @keyframes popIn { from { transform: scale(.95); opacity:0; } to { transform: scale(1); opacity:1; } }
-  .modal-title {
-    font-family: 'DM Serif Display', serif; font-size: 1.4rem;
-    margin-bottom: .3rem;
-  }
-  .modal-sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; line-height: 1.5; }
+/* LEFT */
+.left-panel{background:var(--white);border-right:1px solid var(--rule);display:flex;flex-direction:column;height:calc(100vh - 60px);position:sticky;top:60px;overflow:hidden;}
+.panel-section{padding:1rem 1.25rem;border-bottom:1px solid var(--cream);}
+.panel-label{font-size:.68rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;}
+.customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;}
+.field-group{display:flex;flex-direction:column;gap:.25rem;}
+.field-group.full{grid-column:1/-1;}
+.field-group label{font-size:.7rem;font-weight:500;color:var(--muted);}
+.field-group input,.field-group select{border:1.5px solid var(--rule);border-radius:6px;padding:.4rem .6rem;font-family:inherit;font-size:.85rem;background:var(--paper);color:var(--ink);transition:border-color .15s;width:100%;}
+.field-group input:focus,.field-group select:focus{outline:none;border-color:var(--accent2);}
 
-  .drop-zone {
-    border: 2.5px dashed var(--rule); border-radius: 10px;
-    padding: 2.5rem 1.5rem; text-align: center; cursor: pointer;
-    transition: all .15s; background: var(--paper);
-  }
-  .drop-zone:hover, .drop-zone.dragover {
-    border-color: var(--accent2); background: #eef5fb;
-  }
-  .drop-icon { font-size: 2.2rem; margin-bottom: .5rem; }
-  .drop-text { font-size: .9rem; color: var(--muted); }
-  .drop-text strong { color: var(--accent2); }
-  .drop-input { display: none; }
+/* SEARCH */
+.search-wrap{position:relative;}
+.search-wrap input{width:100%;border:2px solid var(--rule);border-radius:8px;padding:.6rem 1rem .6rem 2.4rem;font-family:inherit;font-size:.9rem;background:var(--paper);transition:border-color .15s;}
+.search-wrap input:focus{outline:none;border-color:var(--accent);}
+.search-icon{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.95rem;pointer-events:none;}
+.search-count{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);font-size:.7rem;color:var(--muted);font-weight:500;}
 
-  .col-map {
-    margin-top: 1.25rem; background: var(--cream); border-radius: 8px;
-    padding: 1rem; font-size: .82rem; color: var(--muted); line-height: 1.8;
-    display: none;
-  }
-  .col-map.visible { display: block; }
-  .col-map strong { color: var(--ink); }
+/* PILLS */
+.pill-wrap{display:flex;gap:.35rem;flex-wrap:wrap;}
+.pill{padding:.25rem .65rem;border-radius:20px;font-size:.72rem;font-weight:500;border:1.5px solid var(--rule);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.pill.active{background:var(--ink);color:var(--white);border-color:var(--ink);}
 
-  .import-status {
-    margin-top: 1rem; padding: .75rem 1rem; border-radius: 8px;
-    font-size: .85rem; display: none;
-  }
-  .import-status.ok  { background: #eafaf1; color: var(--success); display: block; }
-  .import-status.err { background: #fdf2f1; color: var(--accent);  display: block; }
+/* PRODUCT LIST */
+.product-list{flex:1;overflow-y:auto;padding:.4rem;}
+.product-list::-webkit-scrollbar{width:4px;}
+.product-list::-webkit-scrollbar-thumb{background:var(--rule);border-radius:3px;}
 
-  .modal-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1.5rem; }
+.product-card{display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;border-radius:8px;cursor:pointer;transition:background .12s,transform .1s;border:1px solid transparent;margin-bottom:.25rem;}
+.product-card:hover{background:var(--cream);border-color:var(--rule);transform:translateX(2px);}
+.product-card.out-of-stock{opacity:.5;cursor:not-allowed;}
+.product-card.out-of-stock:hover{transform:none;background:transparent;}
+.pname{font-size:.86rem;font-weight:500;color:var(--ink);}
+.pmeta{font-size:.72rem;color:var(--muted);margin-top:.1rem;}
+.ptag{display:inline-block;font-size:.62rem;font-weight:600;padding:.12rem .35rem;border-radius:3px;margin-right:.25rem;background:var(--cream);color:var(--muted);}
+.stock-tag{display:inline-block;font-size:.65rem;font-weight:700;padding:.12rem .4rem;border-radius:3px;margin-left:.2rem;}
+.stock-ok{background:#eafaf1;color:var(--success);}
+.stock-low{background:#fef9e7;color:var(--warn);}
+.stock-out{background:#fdf2f1;color:var(--danger);}
+.pprice{font-size:.88rem;font-weight:600;color:var(--accent2);white-space:nowrap;margin-left:.5rem;}
+.add-btn{width:26px;height:26px;border-radius:50%;border:none;background:var(--accent);color:white;font-size:1rem;cursor:pointer;flex-shrink:0;margin-left:.4rem;transition:background .15s,transform .1s;display:flex;align-items:center;justify-content:center;}
+.add-btn:hover{background:#a83a20;transform:scale(1.1);}
+.no-results{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.88rem;}
 
-  /* ── LAYOUT ── */
-  .app { display: grid; grid-template-columns: 420px 1fr; min-height: calc(100vh - 64px); }
+/* RIGHT */
+.right-panel{padding:1.5rem 2rem;overflow-y:auto;}
+.quote-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;}
+.quote-title{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--ink);}
+.quote-title span{color:var(--accent);font-style:italic;}
+.quote-actions{display:flex;gap:.5rem;flex-wrap:wrap;}
+.btn{padding:.5rem 1rem;border-radius:7px;font-family:inherit;font-size:.82rem;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+.btn-outline{background:transparent;border:1.5px solid var(--rule);color:var(--ink);}
+.btn-outline:hover{border-color:var(--ink);}
+.btn-primary{background:var(--ink);color:var(--white);}
+.btn-primary:hover{background:#1e2d3d;}
+.btn-accent{background:var(--accent);color:var(--white);}
+.btn-accent:hover{background:#a83a20;}
+.btn-green{background:var(--success);color:var(--white);}
+.btn-green:hover{background:#1a4d38;}
 
-  /* ── LEFT PANEL ── */
-  .left-panel {
-    background: var(--white);
-    border-right: 1px solid var(--rule);
-    display: flex; flex-direction: column;
-    height: calc(100vh - 64px);
-    position: sticky; top: 64px;
-    overflow: hidden;
-  }
+/* QUOTE META BAR */
+.quote-meta-bar{background:var(--white);border-radius:10px;border:1px solid var(--rule);padding:.85rem 1.25rem;display:flex;gap:1.5rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+.qmeta-item{display:flex;flex-direction:column;gap:.15rem;}
+.qmeta-label{font-size:.67rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.qmeta-val{font-size:.88rem;font-weight:600;color:var(--ink);}
 
-  .panel-section {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--cream);
-  }
-  .panel-label {
-    font-size: .7rem; font-weight: 600; letter-spacing: .12em;
-    text-transform: uppercase; color: var(--muted); margin-bottom: .6rem;
-  }
+/* TABLE */
+.quote-table-wrap{background:var(--white);border-radius:10px;border:1px solid var(--rule);overflow:hidden;margin-bottom:1rem;}
+.section-label{background:var(--cream);padding:.5rem 1rem;font-size:.7rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.quote-table{width:100%;border-collapse:collapse;}
+.quote-table thead th{background:var(--ink);color:var(--white);font-size:.7rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:.75rem .85rem;text-align:left;}
+.quote-table thead th:last-child{text-align:right;}
+.quote-table tbody tr{border-bottom:1px solid var(--cream);transition:background .1s;}
+.quote-table tbody tr:last-child{border-bottom:none;}
+.quote-table tbody tr:hover{background:var(--paper);}
+.quote-table td{padding:.65rem .85rem;font-size:.85rem;vertical-align:middle;}
+.quote-table td:last-child{text-align:right;}
+.item-name{font-weight:500;}
+.item-meta{font-size:.72rem;color:var(--muted);margin-top:.08rem;}
+.gst-badge{display:inline-block;font-size:.63rem;font-weight:700;padding:.1rem .3rem;border-radius:3px;background:#e8f4f8;color:var(--accent2);}
 
-  /* Customer block */
-  .customer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
-  .field-group { display: flex; flex-direction: column; gap: .3rem; }
-  .field-group.full { grid-column: 1/-1; }
-  .field-group label { font-size: .72rem; font-weight: 500; color: var(--muted); }
-  .field-group input, .field-group select {
-    border: 1.5px solid var(--rule); border-radius: 6px;
-    padding: .45rem .7rem; font-family: inherit; font-size: .88rem;
-    background: var(--paper); color: var(--ink);
-    transition: border-color .15s;
-    width: 100%;
-  }
-  .field-group input:focus, .field-group select:focus {
-    outline: none; border-color: var(--accent2);
-  }
-  select { cursor: pointer; }
+.qty-ctrl{display:flex;align-items:center;gap:.3rem;}
+.qty-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;}
+.qty-btn:hover{background:var(--cream);border-color:var(--ink);}
+.qty-input{width:42px;text-align:center;border:1px solid var(--rule);border-radius:4px;padding:.18rem;font-size:.85rem;font-family:inherit;background:var(--paper);}
+.qty-input:focus{outline:none;border-color:var(--accent2);}
+.disc-input{width:48px;text-align:center;border:1px solid var(--rule);border-radius:4px;padding:.18rem;font-size:.8rem;font-family:inherit;background:var(--paper);}
+.disc-input:focus{outline:none;border-color:var(--accent);}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--rule);font-size:1rem;transition:color .12s;padding:.15rem;}
+.del-btn:hover{color:var(--accent);}
 
-  /* Search */
-  .search-wrap { position: relative; }
-  .search-wrap input {
-    width: 100%; border: 2px solid var(--rule); border-radius: 8px;
-    padding: .65rem 1rem .65rem 2.6rem;
-    font-family: inherit; font-size: .92rem; background: var(--paper);
-    transition: border-color .15s;
-  }
-  .search-wrap input:focus { outline: none; border-color: var(--accent); }
-  .search-icon {
-    position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
-    color: var(--muted); font-size: 1rem; pointer-events: none;
-  }
-  .search-count {
-    position: absolute; right: .85rem; top: 50%; transform: translateY(-50%);
-    font-size: .72rem; color: var(--muted); font-weight: 500;
-  }
+.empty-quote{text-align:center;padding:3rem 2rem;color:var(--muted);}
+.empty-quote .eq-icon{font-size:2.5rem;margin-bottom:.6rem;opacity:.4;}
 
-  /* Product list */
-  .product-list {
-    flex: 1; overflow-y: auto;
-    padding: .5rem;
-  }
-  .product-list::-webkit-scrollbar { width: 5px; }
-  .product-list::-webkit-scrollbar-track { background: transparent; }
-  .product-list::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+/* MISC ROWS */
+.misc-table{width:100%;border-collapse:collapse;}
+.misc-table td{padding:.5rem .85rem;font-size:.85rem;vertical-align:middle;}
+.misc-input{border:1px solid var(--rule);border-radius:5px;padding:.3rem .5rem;font-family:inherit;font-size:.83rem;background:var(--paper);}
+.misc-input:focus{outline:none;border-color:var(--accent2);}
+.misc-desc{width:40%;}
+.add-misc-btn{background:none;border:1.5px dashed var(--rule);border-radius:6px;padding:.4rem 1rem;font-family:inherit;font-size:.8rem;color:var(--muted);cursor:pointer;transition:all .15s;width:100%;margin:.5rem 0;}
+.add-misc-btn:hover{border-color:var(--accent2);color:var(--accent2);}
 
-  .product-card {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: .7rem .9rem; border-radius: 8px; cursor: pointer;
-    transition: background .12s, transform .1s;
-    border: 1px solid transparent;
-    margin-bottom: .3rem;
-  }
-  .product-card:hover { background: var(--cream); border-color: var(--rule); transform: translateX(2px); }
-  .product-card:active { transform: translateX(0); }
-  .product-card .pname { font-size: .88rem; font-weight: 500; color: var(--ink); }
-  .product-card .pmeta { font-size: .74rem; color: var(--muted); margin-top: .1rem; }
-  .product-card .pprice {
-    font-size: .9rem; font-weight: 600; color: var(--accent2);
-    white-space: nowrap; margin-left: .75rem;
-  }
-  .product-card .ptag {
-    display: inline-block; font-size: .65rem; font-weight: 600; padding: .15rem .4rem;
-    border-radius: 3px; margin-right: .3rem;
-    background: var(--cream); color: var(--muted); letter-spacing: .05em;
-  }
-  .add-btn {
-    width: 28px; height: 28px; border-radius: 50%; border: none;
-    background: var(--accent); color: white; font-size: 1.1rem; line-height: 1;
-    cursor: pointer; flex-shrink: 0; margin-left: .5rem;
-    transition: background .15s, transform .1s;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .add-btn:hover { background: #a83a20; transform: scale(1.1); }
+/* WEIGHT/LOADING */
+.wl-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;padding:1rem 1.25rem;}
+.wl-field{display:flex;flex-direction:column;gap:.25rem;}
+.wl-label{font-size:.7rem;font-weight:500;color:var(--muted);}
+.wl-input{border:1.5px solid var(--rule);border-radius:6px;padding:.4rem .6rem;font-family:inherit;font-size:.85rem;background:var(--paper);}
+.wl-input:focus{outline:none;border-color:var(--accent2);}
 
-  .no-results {
-    text-align: center; padding: 2rem 1rem; color: var(--muted);
-    font-size: .9rem;
-  }
-  .no-results .nr-icon { font-size: 2rem; margin-bottom: .5rem; }
+/* DESIGN IMAGE */
+.design-img-zone{padding:1rem 1.25rem;}
+.img-upload-btn{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:1.5px dashed var(--rule);border-radius:8px;background:var(--paper);cursor:pointer;font-family:inherit;font-size:.82rem;color:var(--muted);transition:all .15s;}
+.img-upload-btn:hover{border-color:var(--accent2);color:var(--accent2);}
+.design-preview{max-width:100%;max-height:280px;border-radius:8px;border:1px solid var(--rule);margin-top:.6rem;display:none;}
+.design-preview.visible{display:block;}
+.remove-img-btn{background:none;border:none;font-size:.78rem;color:var(--accent);cursor:pointer;margin-top:.3rem;display:none;font-family:inherit;}
+.remove-img-btn.visible{display:inline-block;}
 
-  /* Category filter pills */
-  .pill-wrap { display: flex; gap: .4rem; flex-wrap: wrap; }
-  .pill {
-    padding: .3rem .75rem; border-radius: 20px; font-size: .75rem;
-    font-weight: 500; border: 1.5px solid var(--rule);
-    background: transparent; color: var(--muted);
-    cursor: pointer; transition: all .15s; white-space: nowrap;
-  }
-  .pill.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+/* TOTALS */
+.totals-grid{background:var(--white);border-radius:10px;border:1px solid var(--rule);overflow:hidden;margin-bottom:1rem;}
+.tot-row{display:flex;justify-content:space-between;align-items:center;padding:.65rem 1.25rem;border-bottom:1px solid var(--cream);}
+.tot-row:last-child{border-bottom:none;}
+.tot-row.grand{background:var(--ink);color:var(--white);padding:.9rem 1.25rem;}
+.tot-label{font-size:.85rem;color:var(--muted);}
+.tot-val{font-size:.9rem;font-weight:600;}
+.tot-row.grand .tot-label{color:rgba(255,255,255,.7);font-size:.88rem;}
+.tot-row.grand .tot-val{color:var(--white);font-size:1.15rem;font-weight:700;}
 
-  /* ── RIGHT PANEL ── */
-  .right-panel { padding: 2rem; overflow-y: auto; }
+/* T&C */
+.tnc-box{background:var(--white);border-radius:10px;border:1px solid var(--rule);padding:1rem 1.25rem;margin-bottom:1rem;}
+.tnc-title{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-bottom:.6rem;}
+.tnc-list{list-style:none;display:flex;flex-direction:column;gap:.3rem;}
+.tnc-list li{font-size:.78rem;color:var(--muted);line-height:1.5;padding-left:1rem;position:relative;}
+.tnc-list li::before{content:"•";position:absolute;left:0;color:var(--gold);}
 
-  /* Quote header */
-  .quote-header {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 1.5rem;
-  }
-  .quote-title {
-    font-family: 'DM Serif Display', serif;
-    font-size: 2rem; color: var(--ink);
-  }
-  .quote-title span { color: var(--accent); font-style: italic; }
-  .quote-actions { display: flex; gap: .6rem; }
-  .btn {
-    padding: .55rem 1.2rem; border-radius: 7px; font-family: inherit;
-    font-size: .85rem; font-weight: 500; cursor: pointer;
-    border: none; transition: all .15s;
-  }
-  .btn-outline { background: transparent; border: 1.5px solid var(--rule); color: var(--ink); }
-  .btn-outline:hover { border-color: var(--ink); }
-  .btn-primary { background: var(--ink); color: var(--white); }
-  .btn-primary:hover { background: #1e2d3d; }
-  .btn-accent { background: var(--accent); color: var(--white); }
-  .btn-accent:hover { background: #a83a20; }
+/* QUOTE HISTORY */
+.history-list{display:flex;flex-direction:column;gap:.5rem;max-height:400px;overflow-y:auto;}
+.history-item{background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:.75rem 1rem;cursor:pointer;transition:all .12s;}
+.history-item:hover{border-color:var(--accent2);background:var(--cream);}
+.hi-top{display:flex;justify-content:space-between;align-items:center;}
+.hi-qno{font-weight:600;font-size:.88rem;}
+.hi-date{font-size:.75rem;color:var(--muted);}
+.hi-cust{font-size:.8rem;color:var(--muted);margin-top:.2rem;}
+.hi-amt{font-size:.85rem;font-weight:600;color:var(--accent2);}
+.hi-del{background:none;border:none;cursor:pointer;color:var(--rule);font-size:.85rem;transition:color .12s;}
+.hi-del:hover{color:var(--accent);}
+.empty-history{text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem;}
 
-  /* Quote meta bar */
-  .quote-meta-bar {
-    background: var(--white); border-radius: 10px;
-    border: 1px solid var(--rule); padding: 1rem 1.25rem;
-    display: flex; gap: 2rem; margin-bottom: 1.5rem;
-    flex-wrap: wrap;
-  }
-  .qmeta-item { display: flex; flex-direction: column; gap: .2rem; }
-  .qmeta-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
-  .qmeta-val { font-size: .92rem; font-weight: 600; color: var(--ink); }
+/* MODALS */
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(15,25,35,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--white);border-radius:14px;padding:1.75rem;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:popIn .2s ease;}
+.modal.wide{width:680px;}
+@keyframes popIn{from{transform:scale(.95);opacity:0;}to{transform:scale(1);opacity:1;}}
+.modal-title{font-family:'DM Serif Display',serif;font-size:1.35rem;margin-bottom:.25rem;}
+.modal-sub{font-size:.83rem;color:var(--muted);margin-bottom:1.25rem;line-height:1.5;}
+.modal-actions{display:flex;justify-content:flex-end;gap:.5rem;margin-top:1.25rem;}
 
-  /* Line items table */
-  .quote-table-wrap {
-    background: var(--white); border-radius: 10px;
-    border: 1px solid var(--rule); overflow: hidden;
-    margin-bottom: 1.5rem;
-  }
-  .quote-table {
-    width: 100%; border-collapse: collapse;
-  }
-  .quote-table thead th {
-    background: var(--ink); color: var(--white);
-    font-size: .72rem; font-weight: 600; letter-spacing: .08em;
-    text-transform: uppercase; padding: .8rem 1rem;
-    text-align: left;
-  }
-  .quote-table thead th:last-child { text-align: right; }
-  .quote-table tbody tr {
-    border-bottom: 1px solid var(--cream);
-    transition: background .1s;
-  }
-  .quote-table tbody tr:last-child { border-bottom: none; }
-  .quote-table tbody tr:hover { background: var(--paper); }
-  .quote-table td { padding: .75rem 1rem; font-size: .88rem; vertical-align: middle; }
-  .quote-table td:last-child { text-align: right; }
+/* DROP ZONE */
+.drop-zone{border:2.5px dashed var(--rule);border-radius:10px;padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:all .15s;background:var(--paper);}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent2);background:#eef5fb;}
+.drop-icon{font-size:2rem;margin-bottom:.4rem;}
+.drop-text{font-size:.87rem;color:var(--muted);}
+.drop-text strong{color:var(--accent2);}
+.drop-input{display:none;}
+.col-map{margin-top:1rem;background:var(--cream);border-radius:8px;padding:.85rem;font-size:.8rem;color:var(--muted);line-height:1.8;}
+.col-map strong{color:var(--ink);}
+.import-status{margin-top:.85rem;padding:.65rem .9rem;border-radius:8px;font-size:.83rem;display:none;}
+.import-status.ok{background:#eafaf1;color:var(--success);display:block;}
+.import-status.err{background:#fdf2f1;color:var(--accent);display:block;}
 
-  .item-name { font-weight: 500; }
-  .item-meta { font-size: .74rem; color: var(--muted); margin-top: .1rem; }
-  .gst-badge {
-    display: inline-block; font-size: .65rem; font-weight: 700;
-    padding: .1rem .35rem; border-radius: 3px;
-    background: #e8f4f8; color: var(--accent2);
-  }
+/* LOGIN */
+.login-grid{display:grid;gap:.75rem;}
+.login-field{display:flex;flex-direction:column;gap:.3rem;}
+.login-field label{font-size:.75rem;font-weight:500;color:var(--muted);}
+.login-field input{border:1.5px solid var(--rule);border-radius:7px;padding:.55rem .75rem;font-family:inherit;font-size:.9rem;background:var(--paper);}
+.login-field input:focus{outline:none;border-color:var(--accent2);}
+.login-err{color:var(--accent);font-size:.8rem;margin-top:.25rem;display:none;}
 
-  .qty-ctrl {
-    display: flex; align-items: center; gap: .4rem;
-  }
-  .qty-btn {
-    width: 24px; height: 24px; border-radius: 4px; border: 1px solid var(--rule);
-    background: var(--paper); color: var(--ink); font-size: .9rem;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    transition: all .12s;
-  }
-  .qty-btn:hover { background: var(--cream); border-color: var(--ink); }
-  .qty-input {
-    width: 46px; text-align: center; border: 1px solid var(--rule);
-    border-radius: 4px; padding: .2rem; font-size: .88rem;
-    font-family: inherit; background: var(--paper);
-  }
-  .qty-input:focus { outline: none; border-color: var(--accent2); }
+/* TOAST */
+.toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--success);color:white;padding:.6rem 1.1rem;border-radius:8px;font-size:.83rem;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(10px);transition:all .2s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0);}
 
-  .disc-input {
-    width: 52px; text-align: center; border: 1px solid var(--rule);
-    border-radius: 4px; padding: .2rem; font-size: .82rem;
-    font-family: inherit; background: var(--paper);
-  }
-  .disc-input:focus { outline: none; border-color: var(--accent); }
-
-  .del-btn {
-    background: none; border: none; cursor: pointer;
-    color: var(--rule); font-size: 1.1rem; transition: color .12s;
-    padding: .2rem;
-  }
-  .del-btn:hover { color: var(--accent); }
-
-  .empty-quote {
-    text-align: center; padding: 3.5rem 2rem; color: var(--muted);
-  }
-  .empty-quote .eq-icon { font-size: 3rem; margin-bottom: .75rem; opacity: .4; }
-  .empty-quote p { font-size: .92rem; }
-  .empty-quote small { font-size: .8rem; opacity: .7; }
-
-  /* Totals */
-  .totals-grid {
-    background: var(--white); border-radius: 10px;
-    border: 1px solid var(--rule); overflow: hidden;
-  }
-  .tot-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: .75rem 1.25rem;
-    border-bottom: 1px solid var(--cream);
-  }
-  .tot-row:last-child { border-bottom: none; }
-  .tot-row.grand {
-    background: var(--ink); color: var(--white);
-    padding: 1rem 1.25rem;
-  }
-  .tot-label { font-size: .88rem; color: var(--muted); }
-  .tot-val { font-size: .92rem; font-weight: 600; }
-  .tot-row.grand .tot-label { color: rgba(255,255,255,.7); font-size: .9rem; }
-  .tot-row.grand .tot-val { color: var(--white); font-size: 1.2rem; font-weight: 700; }
-
-  /* Overall discount row */
-  .disc-row {
-    display: flex; align-items: center; gap: .5rem;
-  }
-  .disc-row input {
-    width: 58px; border: 1px solid var(--rule); border-radius: 4px;
-    padding: .25rem .4rem; font-size: .85rem; text-align: center;
-    font-family: inherit; background: var(--paper);
-  }
-  .disc-row input:focus { outline: none; border-color: var(--accent); }
-
-  /* ── PRINT STYLES ── */
-  @media print {
-    header, .left-panel, .quote-actions, .qty-ctrl, .disc-input, .del-btn { display: none !important; }
-    .app { display: block; }
-    .right-panel { padding: 0; }
-    .quote-table-wrap, .totals-grid { box-shadow: none; border: 1px solid #ccc; }
-    body { background: white; font-size: 12px; }
-    .print-header { display: block !important; }
-  }
-  .print-header { display: none; }
-
-  /* toast */
-  .toast {
-    position: fixed; bottom: 1.5rem; right: 1.5rem;
-    background: var(--success); color: white;
-    padding: .65rem 1.2rem; border-radius: 8px;
-    font-size: .85rem; font-weight: 500;
-    box-shadow: var(--shadow-lg);
-    opacity: 0; transform: translateY(10px);
-    transition: all .2s; pointer-events: none; z-index: 999;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 900px) {
-    .app { grid-template-columns: 1fr; }
-    .left-panel { height: auto; position: static; max-height: 50vh; }
-  }
+/* PRINT */
+@media print {
+  header,.left-panel,.quote-actions,.qty-ctrl,.disc-input,.del-btn,
+  .add-misc-btn,.img-upload-btn,.remove-img-btn,.hbtn,
+  .wl-input,.design-img-zone .img-upload-btn { display:none!important; }
+  .app{display:block;}
+  .right-panel{padding:0;}
+  body{background:white;}
+  .print-logo{display:flex!important;}
+  .quote-table-wrap,.totals-grid,.tnc-box{box-shadow:none;border:1px solid #ccc;break-inside:avoid;}
+  .design-preview{max-height:200px;}
+}
+.print-logo{display:none;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
+.print-logo img{height:60px;border-radius:6px;object-fit:contain;}
+.print-logo-text{font-family:'DM Serif Display',serif;font-size:1.8rem;}
 </style>
 </head>
 <body>
 
+<!-- ═══ HEADER ═══ -->
 <header>
-  <div class="logo">Nik<span>sang</span></div>
-  <div style="display:flex;align-items:center;gap:1rem">
-    <div class="header-meta">Quotation System</div>
-    <button class="import-btn" onclick="openImport()">&#128229; Import Price List</button>
+  <div class="logo">
+    <img class="logo-img" id="headerLogo" src="" alt="Logo"/>
+    Nik<span>sang</span>
+  </div>
+  <div class="header-right">
+    <span class="sp-badge" id="spBadge" style="display:none"></span>
+    <button class="hbtn" onclick="openHistory()">&#128196; Quotes</button>
+    <button class="hbtn" onclick="openImport()">&#128229; Import List</button>
+    <button class="hbtn gold" onclick="openLogoUpload()">&#128444; Logo</button>
+    <button class="hbtn" id="loginBtn" onclick="openLogin()">&#128100; Login</button>
+    <button class="hbtn" id="logoutBtn" style="display:none" onclick="logout()">&#128682; Logout</button>
   </div>
 </header>
 
-<!-- Import Modal -->
-<div class="import-overlay" id="importOverlay">
-  <div class="import-modal">
-    <div class="modal-title">Import Price List</div>
-    <div class="modal-sub">
-      Upload your <strong>Niksang_Quotation_Tool.xlsx</strong> file.<br>
-      The app reads the <em>Price List</em> sheet automatically and replaces the current product list.
-    </div>
-    <div class="drop-zone" id="dropZone"
-         onclick="document.getElementById('fileInput').click()"
-         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
-      <div class="drop-icon">&#128202;</div>
-      <div class="drop-text"><strong>Click to browse</strong> or drag &amp; drop your .xlsx here</div>
-      <input type="file" class="drop-input" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])"/>
-    </div>
-    <div class="col-map visible" id="colMap">
-      <strong>Expected columns in the Price List sheet (rows 4 onward):</strong><br>
-      Col B: Product Name &nbsp;&middot;&nbsp; Col C: Category &nbsp;&middot;&nbsp; Col D: Unit<br>
-      Col E: Retail Price &nbsp;&middot;&nbsp; Col F: Trade Price &nbsp;&middot;&nbsp; Col G: Wholesale Price<br>
-      Col H: GST Rate (5 / 12 / 18) &nbsp;&middot;&nbsp; Col I: Material/Size Option
-    </div>
-    <div class="import-status" id="importStatus"></div>
-    <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeImport()">Cancel</button>
-      <button class="btn btn-primary" id="confirmImportBtn" onclick="confirmImport()" style="display:none">&#10003; Load Products</button>
-    </div>
-  </div>
-</div>
-
+<!-- ═══ MAIN APP ═══ -->
 <div class="app">
 
-  <!-- ── LEFT: Product Finder ── -->
+  <!-- LEFT: Product Finder -->
   <aside class="left-panel">
-
-    <!-- Customer -->
     <div class="panel-section">
       <div class="panel-label">Customer Details</div>
       <div class="customer-grid">
         <div class="field-group full">
           <label>Customer Name</label>
-          <input type="text" id="custName" placeholder="e.g. Raj Enterprises"/>
+          <input type="text" id="custName" placeholder="e.g. Raj Enterprises" oninput="updateQuoteMeta()"/>
+        </div>
+        <div class="field-group full">
+          <label>Customer Phone</label>
+          <input type="text" id="custPhone" placeholder="+91 98765 43210"/>
         </div>
         <div class="field-group">
           <label>Customer Type</label>
-          <select id="custType" onchange="updateQuoteMeta()">
+          <select id="custType" onchange="updateQuoteMeta();refreshQuotePrices()">
             <option value="retail">Retail</option>
             <option value="trade">Trade</option>
             <option value="wholesale">Wholesale</option>
@@ -449,43 +278,44 @@
         </div>
         <div class="field-group">
           <label>Overall Disc %</label>
-          <input type="number" id="overallDisc" value="0" min="0" max="100" step="0.5"
-                 oninput="recalcTotals()" placeholder="0"/>
+          <input type="number" id="overallDisc" value="0" min="0" max="100" step="0.5" oninput="recalcTotals()"/>
         </div>
         <div class="field-group">
           <label>Quote No.</label>
-          <input type="text" id="quoteNo" value="QT-001"/>
+          <input type="text" id="quoteNo" value="QT-001" oninput="updateQuoteMeta()"/>
         </div>
         <div class="field-group">
           <label>Valid Until</label>
-          <input type="date" id="validUntil"/>
+          <input type="date" id="validUntil" oninput="updateQuoteMeta()"/>
         </div>
       </div>
     </div>
 
-    <!-- Category pills -->
-    <div class="panel-section" id="catSection">
+    <div class="panel-section">
       <div class="panel-label">Filter by Category</div>
       <div class="pill-wrap" id="catPills"></div>
     </div>
 
-    <!-- Search -->
     <div class="panel-section" style="padding-bottom:.75rem">
       <div class="panel-label">Search Products</div>
       <div class="search-wrap">
         <span class="search-icon">⌕</span>
-        <input type="text" id="searchInput" placeholder="Type any part of product name…"
-               oninput="filterProducts()"/>
+        <input type="text" id="searchInput" placeholder="Type any part of name…" oninput="filterProducts()"/>
         <span class="search-count" id="searchCount"></span>
       </div>
     </div>
 
-    <!-- Product list -->
     <div class="product-list" id="productList"></div>
   </aside>
 
-  <!-- ── RIGHT: Quote ── -->
+  <!-- RIGHT: Quote -->
   <main class="right-panel">
+
+    <!-- Print logo (hidden on screen) -->
+    <div class="print-logo" id="printLogo">
+      <img id="printLogoImg" src="" alt="Niksang" style="display:none"/>
+      <div class="print-logo-text">Niksang</div>
+    </div>
 
     <div class="quote-header">
       <div>
@@ -493,95 +323,119 @@
       </div>
       <div class="quote-actions">
         <button class="btn btn-outline" onclick="clearQuote()">Clear</button>
-        <button class="btn btn-primary" onclick="window.print()">🖨 Print / PDF</button>
+        <button class="btn btn-green" onclick="saveQuote()">&#128190; Save Quote</button>
+        <button class="btn btn-primary" onclick="window.print()">&#128424; Print / PDF</button>
       </div>
     </div>
 
     <div class="quote-meta-bar">
-      <div class="qmeta-item">
-        <span class="qmeta-label">Quote No.</span>
-        <span class="qmeta-val" id="metaQuoteNo">QT-001</span>
-      </div>
-      <div class="qmeta-item">
-        <span class="qmeta-label">Date</span>
-        <span class="qmeta-val" id="metaDate">—</span>
-      </div>
-      <div class="qmeta-item">
-        <span class="qmeta-label">Valid Until</span>
-        <span class="qmeta-val" id="metaValid">—</span>
-      </div>
-      <div class="qmeta-item">
-        <span class="qmeta-label">Customer</span>
-        <span class="qmeta-val" id="metaCust">—</span>
-      </div>
-      <div class="qmeta-item">
-        <span class="qmeta-label">Pricing Tier</span>
-        <span class="qmeta-val" id="metaTier">Retail</span>
-      </div>
-      <div class="qmeta-item">
-        <span class="qmeta-label">Items</span>
-        <span class="qmeta-val" id="metaItems">0</span>
-      </div>
+      <div class="qmeta-item"><span class="qmeta-label">Quote No.</span><span class="qmeta-val" id="metaQuoteNo">QT-001</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Date</span><span class="qmeta-val" id="metaDate">—</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Valid Until</span><span class="qmeta-val" id="metaValid">—</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Customer</span><span class="qmeta-val" id="metaCust">—</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Tier</span><span class="qmeta-val" id="metaTier">Retail</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Salesperson</span><span class="qmeta-val" id="metaSP">—</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Items</span><span class="qmeta-val" id="metaItems">0</span></div>
     </div>
 
+    <!-- Line Items -->
     <div class="quote-table-wrap">
+      <div class="section-label">Materials &amp; Services</div>
       <table class="quote-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Product / Service</th>
-            <th>Qty</th>
-            <th>Unit Price</th>
-            <th>Line Disc %</th>
-            <th>Amount</th>
-            <th>GST</th>
-            <th>Total</th>
-            <th></th>
+            <th>#</th><th>Product / Service</th><th>Qty</th>
+            <th>Unit Price</th><th>Disc %</th><th>Amount</th>
+            <th>GST</th><th>Total</th><th></th>
           </tr>
         </thead>
         <tbody id="quoteBody">
-          <tr id="emptyRow">
-            <td colspan="9">
-              <div class="empty-quote">
-                <div class="eq-icon">📋</div>
-                <p>No items added yet</p>
-                <small>Search and click a product on the left to add it</small>
-              </div>
-            </td>
-          </tr>
+          <tr id="emptyRow"><td colspan="9">
+            <div class="empty-quote">
+              <div class="eq-icon">&#128203;</div>
+              <p>No items yet — search and click a product to add</p>
+            </div>
+          </td></tr>
         </tbody>
       </table>
     </div>
 
-    <div class="totals-grid">
-      <div class="tot-row">
-        <span class="tot-label">Subtotal (excl. GST)</span>
-        <span class="tot-val" id="totSubtotal">₹ 0.00</span>
+    <!-- Miscellaneous Charges -->
+    <div class="quote-table-wrap">
+      <div class="section-label">Miscellaneous Charges</div>
+      <table class="misc-table">
+        <thead>
+          <tr style="background:var(--ink)">
+            <th style="color:var(--white);font-size:.7rem;padding:.65rem .85rem;text-align:left;font-weight:600;letter-spacing:.07em;text-transform:uppercase">Description</th>
+            <th style="color:var(--white);font-size:.7rem;padding:.65rem .85rem;text-align:left;font-weight:600;letter-spacing:.07em;text-transform:uppercase">Amount</th>
+            <th style="color:var(--white);font-size:.7rem;padding:.65rem .85rem;text-align:left;font-weight:600;letter-spacing:.07em;text-transform:uppercase">GST %</th>
+            <th style="color:var(--white);font-size:.7rem;padding:.65rem .85rem;text-align:left;font-weight:600;letter-spacing:.07em;text-transform:uppercase">GST Amt</th>
+            <th style="color:var(--white);font-size:.7rem;padding:.65rem .85rem;text-align:right;font-weight:600;letter-spacing:.07em;text-transform:uppercase">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="miscBody"></tbody>
+      </table>
+      <button class="add-misc-btn" onclick="addMiscRow()">+ Add Miscellaneous Charge</button>
+    </div>
+
+    <!-- Weight & Loading -->
+    <div class="quote-table-wrap">
+      <div class="section-label">Weight &amp; Loading Charges</div>
+      <div class="wl-grid">
+        <div class="wl-field">
+          <span class="wl-label">Total Weight (kg)</span>
+          <input class="wl-input" type="number" id="wlWeight" placeholder="0" min="0" oninput="recalcTotals()"/>
+        </div>
+        <div class="wl-field">
+          <span class="wl-label">Rate per kg (&#8377;)</span>
+          <input class="wl-input" type="number" id="wlRate" placeholder="0" min="0" oninput="recalcTotals()"/>
+        </div>
+        <div class="wl-field">
+          <span class="wl-label">Loading Charge (&#8377;)</span>
+          <input class="wl-input" type="number" id="wlLoading" placeholder="0" min="0" oninput="recalcTotals()"/>
+        </div>
       </div>
-      <div class="tot-row">
-        <span class="tot-label">
-          <div class="disc-row">
-            Overall Discount
-            <span style="font-size:.8rem;color:var(--muted)">applied on subtotal</span>
-          </div>
-        </span>
-        <span class="tot-val" id="totDiscount" style="color:var(--accent)">- ₹ 0.00</span>
-      </div>
-      <div class="tot-row">
-        <span class="tot-label">Total GST</span>
-        <span class="tot-val" id="totGST">₹ 0.00</span>
-      </div>
-      <div class="tot-row grand">
-        <span class="tot-label">Grand Total (incl. GST)</span>
-        <span class="tot-val" id="totGrand">₹ 0.00</span>
+      <div style="padding:.25rem 1.25rem .75rem;display:flex;gap:2rem;">
+        <span style="font-size:.82rem;color:var(--muted)">Weight charge: <strong id="wlWeightCharge">&#8377; 0.00</strong></span>
+        <span style="font-size:.82rem;color:var(--muted)">Total loading: <strong id="wlTotal">&#8377; 0.00</strong></span>
       </div>
     </div>
 
-    <div style="margin-top:1.25rem;padding:1rem 1.25rem;background:var(--cream);border-radius:8px;font-size:.8rem;color:var(--muted);line-height:1.6">
-      <strong style="color:var(--ink)">Terms & Conditions:</strong>
-      This quotation is valid for 30 days from the date of issue. Prices are subject to change after the validity period.
-      50% advance payment required to confirm the order. GST charged as per government regulations.
-      All disputes subject to local jurisdiction.
+    <!-- Design Image -->
+    <div class="quote-table-wrap">
+      <div class="section-label">Custom Design / Reference Image (Optional)</div>
+      <div class="design-img-zone">
+        <label class="img-upload-btn">
+          &#128444; Click to upload design image
+          <input type="file" accept="image/*" style="display:none" onchange="loadDesignImage(this)"/>
+        </label>
+        <img class="design-preview" id="designPreview" src="" alt="Design"/>
+        <button class="remove-img-btn" id="removeImgBtn" onclick="removeDesignImage()">&#10005; Remove image</button>
+      </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="totals-grid">
+      <div class="tot-row"><span class="tot-label">Subtotal (excl. GST)</span><span class="tot-val" id="totSubtotal">&#8377; 0.00</span></div>
+      <div class="tot-row"><span class="tot-label">Overall Discount</span><span class="tot-val" id="totDiscount" style="color:var(--accent)">- &#8377; 0.00</span></div>
+      <div class="tot-row"><span class="tot-label">Weight &amp; Loading Charges</span><span class="tot-val" id="totWL">&#8377; 0.00</span></div>
+      <div class="tot-row"><span class="tot-label">Miscellaneous Charges</span><span class="tot-val" id="totMisc">&#8377; 0.00</span></div>
+      <div class="tot-row"><span class="tot-label">Total GST</span><span class="tot-val" id="totGST">&#8377; 0.00</span></div>
+      <div class="tot-row grand"><span class="tot-label">Grand Total (incl. GST)</span><span class="tot-val" id="totGrand">&#8377; 0.00</span></div>
+    </div>
+
+    <!-- T&C -->
+    <div class="tnc-box">
+      <div class="tnc-title">Terms &amp; Conditions</div>
+      <ul class="tnc-list">
+        <li><strong>Price Validity:</strong> Prices are valid for 7 days from the date of issue and may vary thereafter based on market conditions.</li>
+        <li><strong>Payment Terms:</strong> 50% advance required to confirm order. Balance to be cleared in full before loading. Cheque payments: material loaded only after 3 days of successful clearance.</li>
+        <li><strong>Taxes &amp; Charges:</strong> GST, packing, and loading charges are additional and to be borne by the customer unless stated otherwise in this quote.</li>
+        <li><strong>Natural Variations:</strong> Marble, Granite, Slate, and Sandstone are natural products and may have variations in colour, veins, and patterns. No returns or exchanges for natural variations.</li>
+        <li><strong>Damage &amp; Transit:</strong> Once goods are loaded from our godown, the company holds no responsibility for breakage or damage during transit. All freight arrangements and costs are the buyer's responsibility.</li>
+        <li><strong>No Return Policy:</strong> Goods once sold or cut-to-size as per customer requirements cannot be returned, exchanged, or refunded under any circumstances.</li>
+      </ul>
     </div>
 
   </main>
@@ -589,84 +443,171 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══ IMPORT MODAL ═══ -->
+<div class="overlay" id="importOverlay">
+  <div class="modal">
+    <div class="modal-title">Import Price List</div>
+    <div class="modal-sub">Upload your <strong>Niksang_Quotation_Tool.xlsx</strong>. The app reads the <em>Price List</em> sheet including the new Stock column (Col J).</div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div class="drop-icon">&#128202;</div>
+      <div class="drop-text"><strong>Click to browse</strong> or drag &amp; drop your .xlsx here</div>
+      <input type="file" class="drop-input" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])"/>
+    </div>
+    <div class="col-map">
+      <strong>Price List sheet columns (row 4 onwards):</strong><br>
+      B: Name &nbsp;·&nbsp; C: Category &nbsp;·&nbsp; D: Unit &nbsp;·&nbsp; E: Retail &nbsp;·&nbsp; F: Trade &nbsp;·&nbsp; G: Wholesale &nbsp;·&nbsp; H: GST% &nbsp;·&nbsp; I: Option &nbsp;·&nbsp; <strong>J: Stock Qty</strong>
+    </div>
+    <div class="import-status" id="importStatus"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeOverlay('importOverlay')">Cancel</button>
+      <button class="btn btn-primary" id="confirmImportBtn" onclick="confirmImport()" style="display:none">&#10003; Load Products</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HISTORY MODAL ═══ -->
+<div class="overlay" id="historyOverlay">
+  <div class="modal wide">
+    <div class="modal-title">Quote History</div>
+    <div class="modal-sub">Saved quotes are stored in your browser. Click any quote to reload it.</div>
+    <div class="history-list" id="historyList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeOverlay('historyOverlay')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN MODAL ═══ -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <div class="modal-title">Salesperson Login</div>
+    <div class="modal-sub">Enter your name and PIN to identify yourself on quotes.</div>
+    <div class="login-grid">
+      <div class="login-field">
+        <label>Your Name</label>
+        <input type="text" id="loginName" placeholder="e.g. Arjun Sharma"/>
+      </div>
+      <div class="login-field">
+        <label>PIN (4 digits)</label>
+        <input type="password" id="loginPin" placeholder="••••" maxlength="4" inputmode="numeric"/>
+      </div>
+      <div class="login-err" id="loginErr">Incorrect PIN. Please try again.</div>
+    </div>
+    <div class="modal-sub" style="margin-top:.75rem;margin-bottom:0;font-size:.75rem">
+      Default PINs — Sales1: <strong>1111</strong> &nbsp;·&nbsp; Sales2: <strong>2222</strong> &nbsp;·&nbsp; Manager: <strong>9999</strong><br>
+      <em>You can change PINs in the SALESPEOPLE object in the app code.</em>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeOverlay('loginOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="doLogin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOGO UPLOAD MODAL ═══ -->
+<div class="overlay" id="logoOverlay">
+  <div class="modal">
+    <div class="modal-title">Upload Company Logo</div>
+    <div class="modal-sub">Upload once — your logo will appear on all quotes and the print header.</div>
+    <label class="drop-zone" style="cursor:pointer">
+      <div class="drop-icon">&#128444;</div>
+      <div class="drop-text"><strong>Click to choose logo image</strong><br>PNG or JPG recommended</div>
+      <input type="file" accept="image/*" style="display:none" onchange="loadLogo(this)"/>
+    </label>
+    <div id="logoPreviewWrap" style="margin-top:.75rem;display:none;text-align:center;">
+      <img id="logoPreview" src="" style="max-height:80px;border-radius:6px;border:1px solid var(--rule)"/>
+      <br><button class="btn btn-outline" style="margin-top:.5rem;font-size:.78rem" onclick="removeLogo()">Remove Logo</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="closeOverlay('logoOverlay')">Done</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── SAMPLE PRODUCT DATA (replace / extend with your real products) ──
-// Format: { name, category, unit, retail, trade, wholesale, gst, option }
-const PRODUCTS = [
-  { name:"Product A",        category:"Products",  unit:"Piece", retail:100,  trade:85,   wholesale:70,  gst:18, option:"Standard" },
-  { name:"Product B",        category:"Products",  unit:"Piece", retail:200,  trade:170,  wholesale:140, gst:12, option:"Large" },
-  { name:"Product B (Small)",category:"Products",  unit:"Piece", retail:120,  trade:102,  wholesale:84,  gst:12, option:"Small" },
-  { name:"Product C",        category:"Products",  unit:"Box",   retail:350,  trade:297,  wholesale:245, gst:18, option:"" },
-  { name:"Product D",        category:"Products",  unit:"Piece", retail:75,   trade:64,   wholesale:53,  gst:12, option:"" },
-  { name:"Service A",        category:"Services",  unit:"Hour",  retail:500,  trade:450,  wholesale:400, gst:5,  option:"" },
-  { name:"Service B",        category:"Services",  unit:"Visit", retail:800,  trade:720,  wholesale:650, gst:5,  option:"" },
-  { name:"Service C",        category:"Services",  unit:"Day",   retail:3500, trade:3150, wholesale:2800,gst:5,  option:"" },
-  { name:"Material X",       category:"Materials", unit:"Kg",    retail:50,   trade:42,   wholesale:35,  gst:18, option:"Grade A" },
-  { name:"Material X (B)",   category:"Materials", unit:"Kg",    retail:40,   trade:34,   wholesale:28,  gst:18, option:"Grade B" },
-  { name:"Material Y",       category:"Materials", unit:"Litre", retail:90,   trade:77,   wholesale:63,  gst:12, option:"" },
-  { name:"Material Z",       category:"Materials", unit:"Metre", retail:120,  trade:102,  wholesale:84,  gst:18, option:"" },
-  // ↑ Add your 250-300 products here in the same format
+// ══════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════
+const SALESPEOPLE = {
+  "Sales1":   "1111",
+  "Sales2":   "2222",
+  "Manager":  "9999",
+};
+const LOW_STOCK_THRESHOLD = 100;
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let PRODUCTS = [
+  { name:"Makrana White Marble",  category:"Marble",   unit:"Sqft", retail:180, trade:155, wholesale:130, gst:18, option:"Premium", stock:450 },
+  { name:"Katni Marble",          category:"Marble",   unit:"Sqft", retail:120, trade:100, wholesale:85,  gst:18, option:"Standard",stock:80  },
+  { name:"Black Galaxy Granite",  category:"Granite",  unit:"Sqft", retail:200, trade:170, wholesale:145, gst:18, option:"Polished", stock:320 },
+  { name:"Kashmir White Granite", category:"Granite",  unit:"Sqft", retail:220, trade:190, wholesale:160, gst:18, option:"",         stock:15  },
+  { name:"Kota Stone",            category:"Sandstone",unit:"Sqft", retail:45,  trade:38,  wholesale:32,  gst:12, option:"Blue",     stock:0   },
+  { name:"Slate Tiles",           category:"Slate",    unit:"Sqft", retail:65,  trade:55,  wholesale:47,  gst:12, option:"Natural",  stock:600 },
+  { name:"Polishing Service",     category:"Services", unit:"Sqft", retail:25,  trade:22,  wholesale:18,  gst:5,  option:"",         stock:null},
+  { name:"Cutting Service",       category:"Services", unit:"Piece",retail:150, trade:130, wholesale:110, gst:5,  option:"",         stock:null},
 ];
 
-// ── STATE ──
-let quoteItems = [];
+let quoteItems  = [];
+let miscItems   = [];
 let activeCategory = "All";
-let quoteCounter = 0;
+let quoteCounter   = 0;
+let miscCounter    = 0;
+let currentSP      = null;
+let logoDataURL    = null;
+let designDataURL  = null;
+let pendingProducts = null;
 
-// ── INIT ──
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
 function init() {
-  // Set today's date and default valid until
   const today = new Date();
-  const validDate = new Date(today); validDate.setDate(validDate.getDate() + 30);
-  document.getElementById("validUntil").value = validDate.toISOString().split("T")[0];
-  document.getElementById("metaDate").textContent = formatDate(today);
-  document.getElementById("metaValid").textContent = formatDate(validDate);
+  const vd    = new Date(today); vd.setDate(vd.getDate() + 7);
+  document.getElementById("validUntil").value = vd.toISOString().split("T")[0];
+  document.getElementById("metaDate").textContent  = formatDate(today);
+  document.getElementById("metaValid").textContent = formatDate(vd);
+
+  // Restore logo
+  const saved = localStorage.getItem("niksang_logo");
+  if (saved) applyLogo(saved);
 
   buildCategoryPills();
   filterProducts();
   updateQuoteMeta();
-
-  // Live update quote meta
-  document.getElementById("custName").addEventListener("input", updateQuoteMeta);
-  document.getElementById("quoteNo").addEventListener("input", updateQuoteMeta);
-  document.getElementById("validUntil").addEventListener("input", updateQuoteMeta);
-  document.getElementById("custType").addEventListener("change", () => {
-    updateQuoteMeta();
-    refreshQuotePrices();
-  });
 }
 
 function formatDate(d) {
   return d.toLocaleDateString("en-IN", { day:"2-digit", month:"short", year:"numeric" });
 }
 function fmt(n) {
-  return "₹ " + Number(n).toLocaleString("en-IN", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  return "\u20B9 " + Number(n).toLocaleString("en-IN", { minimumFractionDigits:2, maximumFractionDigits:2 });
 }
 
-// ── CATEGORIES ──
+// ══════════════════════════════════════════════════
+// CATEGORIES & SEARCH
+// ══════════════════════════════════════════════════
 function buildCategoryPills() {
   const cats = ["All", ...new Set(PRODUCTS.map(p => p.category))];
-  const wrap = document.getElementById("catPills");
-  wrap.innerHTML = cats.map(c =>
+  document.getElementById("catPills").innerHTML = cats.map(c =>
     `<button class="pill ${c==="All"?"active":""}" onclick="setCategory('${c}')">${c}</button>`
   ).join("");
 }
 
 function setCategory(cat) {
   activeCategory = cat;
-  document.querySelectorAll(".pill").forEach(p => {
-    p.classList.toggle("active", p.textContent === cat);
-  });
+  document.querySelectorAll(".pill").forEach(p => p.classList.toggle("active", p.textContent===cat));
   filterProducts();
 }
 
-// ── SEARCH / FILTER ──
 function filterProducts() {
-  const q = document.getElementById("searchInput").value.trim().toLowerCase();
+  const q    = document.getElementById("searchInput").value.trim().toLowerCase();
   const tier = document.getElementById("custType").value;
 
   let results = PRODUCTS.filter(p => {
-    const matchCat = activeCategory === "All" || p.category === activeCategory;
+    const matchCat = activeCategory==="All" || p.category===activeCategory;
     const matchQ   = !q || p.name.toLowerCase().includes(q) ||
                      p.category.toLowerCase().includes(q) ||
                      (p.option && p.option.toLowerCase().includes(q));
@@ -678,26 +619,40 @@ function filterProducts() {
 
   const list = document.getElementById("productList");
   if (results.length === 0) {
-    list.innerHTML = `<div class="no-results"><div class="nr-icon">🔍</div>No products match "<strong>${q}</strong>"</div>`;
+    list.innerHTML = `<div class="no-results">&#128269; No products match "<strong>${q}</strong>"</div>`;
     return;
   }
 
   list.innerHTML = results.map(p => {
-    const price = p[tier];
+    const price   = p[tier];
+    const stockNum = (p.stock === null || p.stock === undefined) ? null : Number(p.stock);
+    let stockBadge = "";
+    let isOut = false;
+    if (stockNum !== null) {
+      if (stockNum <= 0) {
+        stockBadge = `<span class="stock-tag stock-out">Out of Stock</span>`;
+        isOut = true;
+      } else if (stockNum < LOW_STOCK_THRESHOLD) {
+        stockBadge = `<span class="stock-tag stock-low">Low: ${stockNum}</span>`;
+      } else {
+        stockBadge = `<span class="stock-tag stock-ok">In Stock: ${stockNum}</span>`;
+      }
+    }
     return `
-      <div class="product-card" onclick='addProduct(${JSON.stringify(p)})'>
+      <div class="product-card ${isOut?"out-of-stock":""}"
+           onclick="${isOut?"showToast('Out of stock')":("addProduct("+JSON.stringify(p)+")")}">
         <div style="flex:1;min-width:0">
           <div class="pname">${highlight(p.name, q)}</div>
           <div class="pmeta">
             <span class="ptag">${p.category}</span>
             <span class="ptag">GST ${p.gst}%</span>
             ${p.option ? `<span class="ptag">${p.option}</span>` : ""}
-            ${p.unit}
+            ${p.unit} ${stockBadge}
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:.4rem;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:.35rem;flex-shrink:0">
           <span class="pprice">${fmt(price)}</span>
-          <button class="add-btn" title="Add to quote">+</button>
+          <button class="add-btn" title="Add to quote" ${isOut?"disabled":""}>+</button>
         </div>
       </div>`;
   }).join("");
@@ -709,73 +664,57 @@ function highlight(text, q) {
   return text.replace(re, `<mark style="background:#fff3cd;border-radius:2px">$1</mark>`);
 }
 
-// ── ADD PRODUCT ──
+// ══════════════════════════════════════════════════
+// ADD PRODUCT
+// ══════════════════════════════════════════════════
 function addProduct(p) {
   quoteCounter++;
-  const tier = document.getElementById("custType").value;
   quoteItems.push({
-    id: quoteCounter,
-    name: p.name,
-    category: p.category,
-    unit: p.unit,
-    gst: p.gst,
-    option: p.option,
-    prices: { retail: p.retail, trade: p.trade, wholesale: p.wholesale },
-    qty: 1,
-    disc: 0,
+    id: quoteCounter, name:p.name, category:p.category, unit:p.unit,
+    gst:p.gst, option:p.option,
+    prices:{ retail:p.retail, trade:p.trade, wholesale:p.wholesale },
+    qty:1, disc:0,
   });
   renderQuote();
   showToast(`"${p.name}" added`);
 }
 
-// ── RENDER QUOTE TABLE ──
+// ══════════════════════════════════════════════════
+// RENDER QUOTE
+// ══════════════════════════════════════════════════
 function renderQuote() {
   const tbody = document.getElementById("quoteBody");
   const tier  = document.getElementById("custType").value;
 
   if (quoteItems.length === 0) {
-    tbody.innerHTML = `<tr id="emptyRow"><td colspan="9">
-      <div class="empty-quote">
-        <div class="eq-icon">📋</div>
-        <p>No items added yet</p>
-        <small>Search and click a product on the left to add it</small>
-      </div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-quote">
+      <div class="eq-icon">&#128203;</div><p>No items yet — search and click a product to add</p>
+    </div></td></tr>`;
     recalcTotals();
+    document.getElementById("metaItems").textContent = 0;
     return;
   }
 
   tbody.innerHTML = quoteItems.map((item, idx) => {
-    const unitPrice = item.prices[tier];
-    const amount    = unitPrice * item.qty * (1 - item.disc / 100);
-    const gstAmt    = amount * item.gst / 100;
-    const total     = amount + gstAmt;
-
+    const up  = item.prices[tier];
+    const amt = up * item.qty * (1 - item.disc/100);
+    const gst = amt * item.gst/100;
+    const tot = amt + gst;
     return `<tr>
-      <td style="color:var(--muted);font-size:.8rem">${idx+1}</td>
-      <td>
-        <div class="item-name">${item.name}</div>
-        <div class="item-meta">
-          ${item.category} · ${item.unit}
-          ${item.option ? ` · ${item.option}` : ""}
-        </div>
-      </td>
-      <td>
-        <div class="qty-ctrl">
-          <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
-          <input class="qty-input" type="number" min="1" value="${item.qty}"
-                 onchange="setQty(${item.id},this.value)"/>
-          <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
-        </div>
-      </td>
-      <td>${fmt(unitPrice)}</td>
-      <td>
-        <input class="disc-input" type="number" min="0" max="100" step="0.5"
-               value="${item.disc}" onchange="setDisc(${item.id},this.value)"/>%
-      </td>
-      <td>${fmt(amount)}</td>
-      <td><span class="gst-badge">${item.gst}%</span> ${fmt(gstAmt)}</td>
-      <td><strong>${fmt(total)}</strong></td>
-      <td><button class="del-btn" onclick="removeItem(${item.id})" title="Remove">✕</button></td>
+      <td style="color:var(--muted);font-size:.78rem">${idx+1}</td>
+      <td><div class="item-name">${item.name}</div>
+          <div class="item-meta">${item.category} · ${item.unit}${item.option?" · "+item.option:""}</div></td>
+      <td><div class="qty-ctrl">
+        <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
+        <input class="qty-input" type="number" min="1" value="${item.qty}" onchange="setQty(${item.id},this.value)"/>
+        <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
+      </div></td>
+      <td>${fmt(up)}</td>
+      <td><input class="disc-input" type="number" min="0" max="100" step="0.5" value="${item.disc}" onchange="setDisc(${item.id},this.value)"/>%</td>
+      <td>${fmt(amt)}</td>
+      <td><span class="gst-badge">${item.gst}%</span> ${fmt(gst)}</td>
+      <td><strong>${fmt(tot)}</strong></td>
+      <td><button class="del-btn" onclick="removeItem(${item.id})">✕</button></td>
     </tr>`;
   }).join("");
 
@@ -783,197 +722,396 @@ function renderQuote() {
   document.getElementById("metaItems").textContent = quoteItems.length;
 }
 
-// ── ITEM CONTROLS ──
+// ══════════════════════════════════════════════════
+// MISC ROWS
+// ══════════════════════════════════════════════════
+function addMiscRow() {
+  miscCounter++;
+  miscItems.push({ id: miscCounter, desc:"", amount:0, gst:0 });
+  renderMisc();
+}
+
+function renderMisc() {
+  const tbody = document.getElementById("miscBody");
+  if (miscItems.length === 0) { tbody.innerHTML = ""; recalcTotals(); return; }
+
+  tbody.innerHTML = miscItems.map((m, idx) => {
+    const gstAmt = m.amount * m.gst / 100;
+    const total  = m.amount + gstAmt;
+    return `<tr style="border-bottom:1px solid var(--cream)">
+      <td><input class="misc-input misc-desc" type="text" placeholder="e.g. Cutting charges"
+          value="${m.desc}" onchange="setMiscField(${m.id},'desc',this.value)" style="width:100%"/></td>
+      <td><input class="misc-input" type="number" min="0" value="${m.amount||""}"
+          placeholder="0" onchange="setMiscField(${m.id},'amount',parseFloat(this.value)||0)"
+          style="width:90px"/></td>
+      <td>
+        <select class="misc-input" onchange="setMiscField(${m.id},'gst',parseInt(this.value))" style="width:70px">
+          <option value="0"  ${m.gst===0?"selected":""}>0%</option>
+          <option value="5"  ${m.gst===5?"selected":""}>5%</option>
+          <option value="12" ${m.gst===12?"selected":""}>12%</option>
+          <option value="18" ${m.gst===18?"selected":""}>18%</option>
+        </select>
+      </td>
+      <td style="font-size:.82rem">${fmt(gstAmt)}</td>
+      <td style="text-align:right"><strong>${fmt(total)}</strong></td>
+      <td><button class="del-btn" onclick="removeMisc(${m.id})">✕</button></td>
+    </tr>`;
+  }).join("");
+
+  recalcTotals();
+}
+
+function setMiscField(id, field, val) {
+  const m = miscItems.find(i=>i.id===id);
+  if (m) { m[field]=val; renderMisc(); }
+}
+function removeMisc(id) {
+  miscItems = miscItems.filter(i=>i.id!==id);
+  renderMisc();
+}
+
+// ══════════════════════════════════════════════════
+// ITEM CONTROLS
+// ══════════════════════════════════════════════════
 function changeQty(id, delta) {
-  const item = quoteItems.find(i => i.id === id);
-  if (item) { item.qty = Math.max(1, item.qty + delta); renderQuote(); }
+  const item = quoteItems.find(i=>i.id===id);
+  if (item) { item.qty=Math.max(1,item.qty+delta); renderQuote(); }
 }
 function setQty(id, val) {
-  const item = quoteItems.find(i => i.id === id);
-  if (item) { item.qty = Math.max(1, parseFloat(val)||1); renderQuote(); }
+  const item = quoteItems.find(i=>i.id===id);
+  if (item) { item.qty=Math.max(1,parseFloat(val)||1); renderQuote(); }
 }
 function setDisc(id, val) {
-  const item = quoteItems.find(i => i.id === id);
-  if (item) { item.disc = Math.min(100, Math.max(0, parseFloat(val)||0)); renderQuote(); }
+  const item = quoteItems.find(i=>i.id===id);
+  if (item) { item.disc=Math.min(100,Math.max(0,parseFloat(val)||0)); renderQuote(); }
 }
-function removeItem(id) {
-  quoteItems = quoteItems.filter(i => i.id !== id);
-  renderQuote();
-}
+function removeItem(id) { quoteItems=quoteItems.filter(i=>i.id!==id); renderQuote(); }
 function clearQuote() {
-  if (quoteItems.length && !confirm("Clear all items from the quote?")) return;
-  quoteItems = []; renderQuote();
+  if ((quoteItems.length||miscItems.length) && !confirm("Clear all items?")) return;
+  quoteItems=[]; miscItems=[]; renderQuote(); renderMisc();
+  document.getElementById("wlWeight").value="";
+  document.getElementById("wlRate").value="";
+  document.getElementById("wlLoading").value="";
+  removeDesignImage();
 }
 
-// ── RECALC TOTALS ──
+// ══════════════════════════════════════════════════
+// RECALC TOTALS
+// ══════════════════════════════════════════════════
 function recalcTotals() {
   const tier     = document.getElementById("custType").value;
-  const overDisc = parseFloat(document.getElementById("overallDisc").value) || 0;
+  const overDisc = parseFloat(document.getElementById("overallDisc").value)||0;
+  const wlWeight = parseFloat(document.getElementById("wlWeight").value)||0;
+  const wlRate   = parseFloat(document.getElementById("wlRate").value)||0;
+  const wlLoad   = parseFloat(document.getElementById("wlLoading").value)||0;
 
-  let subtotal = 0, gstTotal = 0;
+  let subtotal=0, gstTotal=0;
   quoteItems.forEach(item => {
     const up  = item.prices[tier];
-    const amt = up * item.qty * (1 - item.disc / 100);
+    const amt = up * item.qty * (1 - item.disc/100);
     subtotal += amt;
-    gstTotal += amt * item.gst / 100;
+    gstTotal += amt * item.gst/100;
   });
 
-  const discAmt  = subtotal * overDisc / 100;
-  const grandTotal = subtotal - discAmt + gstTotal;
+  const discAmt   = subtotal * overDisc/100;
+  const wlCharge  = wlWeight * wlRate;
+  const wlTotal   = wlCharge + wlLoad;
+
+  let miscTotal=0, miscGST=0;
+  miscItems.forEach(m => {
+    miscTotal += m.amount;
+    miscGST   += m.amount * m.gst/100;
+  });
+  gstTotal += miscGST;
+
+  const grand = subtotal - discAmt + wlTotal + miscTotal + gstTotal;
 
   document.getElementById("totSubtotal").textContent = fmt(subtotal);
   document.getElementById("totDiscount").textContent = `- ${fmt(discAmt)}`;
+  document.getElementById("totWL").textContent       = fmt(wlTotal);
+  document.getElementById("totMisc").textContent     = fmt(miscTotal);
   document.getElementById("totGST").textContent      = fmt(gstTotal);
-  document.getElementById("totGrand").textContent    = fmt(grandTotal);
+  document.getElementById("totGrand").textContent    = fmt(grand);
+  document.getElementById("wlWeightCharge").textContent = fmt(wlCharge);
+  document.getElementById("wlTotal").textContent        = fmt(wlTotal);
 }
 
-// ── REFRESH PRICES WHEN TIER CHANGES ──
-function refreshQuotePrices() {
-  renderQuote();
-  filterProducts();
-}
+function refreshQuotePrices() { renderQuote(); filterProducts(); }
 
-// ── QUOTE META ──
+// ══════════════════════════════════════════════════
+// QUOTE META
+// ══════════════════════════════════════════════════
 function updateQuoteMeta() {
-  const name  = document.getElementById("custName").value || "—";
-  const qno   = document.getElementById("quoteNo").value  || "—";
+  const name  = document.getElementById("custName").value||"—";
+  const qno   = document.getElementById("quoteNo").value||"—";
   const valid = document.getElementById("validUntil").value;
   const tier  = document.getElementById("custType");
-  const tierLabel = tier.options[tier.selectedIndex].text;
-
   document.getElementById("metaCust").textContent    = name;
   document.getElementById("metaQuoteNo").textContent = qno;
-  document.getElementById("metaTier").textContent    = tierLabel;
-  if (valid) {
-    document.getElementById("metaValid").textContent = formatDate(new Date(valid + "T00:00:00"));
+  document.getElementById("metaTier").textContent    = tier.options[tier.selectedIndex].text;
+  if (valid) document.getElementById("metaValid").textContent = formatDate(new Date(valid+"T00:00:00"));
+}
+
+// ══════════════════════════════════════════════════
+// SAVE / HISTORY
+// ══════════════════════════════════════════════════
+function saveQuote() {
+  if (quoteItems.length===0 && miscItems.length===0) { showToast("Nothing to save!"); return; }
+  const tier = document.getElementById("custType").value;
+  let grand = 0;
+  quoteItems.forEach(i => {
+    const amt = i.prices[tier]*i.qty*(1-i.disc/100);
+    grand += amt + amt*i.gst/100;
+  });
+  miscItems.forEach(m => { grand += m.amount + m.amount*m.gst/100; });
+  grand += (parseFloat(document.getElementById("wlWeight").value)||0)*(parseFloat(document.getElementById("wlRate").value)||0)
+           + (parseFloat(document.getElementById("wlLoading").value)||0);
+
+  const record = {
+    id: Date.now(),
+    quoteNo:   document.getElementById("quoteNo").value,
+    date:      new Date().toISOString(),
+    custName:  document.getElementById("custName").value,
+    custPhone: document.getElementById("custPhone").value,
+    custType:  tier,
+    sp:        currentSP,
+    grand:     grand,
+    quoteItems:  JSON.parse(JSON.stringify(quoteItems)),
+    miscItems:   JSON.parse(JSON.stringify(miscItems)),
+    overallDisc: parseFloat(document.getElementById("overallDisc").value)||0,
+    wlWeight:  document.getElementById("wlWeight").value,
+    wlRate:    document.getElementById("wlRate").value,
+    wlLoading: document.getElementById("wlLoading").value,
+  };
+
+  const history = JSON.parse(localStorage.getItem("niksang_history")||"[]");
+  history.unshift(record);
+  if (history.length>50) history.pop();
+  localStorage.setItem("niksang_history", JSON.stringify(history));
+  showToast("Quote saved!");
+}
+
+function openHistory() {
+  const history = JSON.parse(localStorage.getItem("niksang_history")||"[]");
+  const list = document.getElementById("historyList");
+  if (history.length===0) {
+    list.innerHTML = `<div class="empty-history">No saved quotes yet.</div>`;
+  } else {
+    list.innerHTML = history.map(q => `
+      <div class="history-item" onclick="loadQuote(${q.id})">
+        <div class="hi-top">
+          <span class="hi-qno">${q.quoteNo}</span>
+          <span style="display:flex;align-items:center;gap:.5rem">
+            <span class="hi-amt">${fmt(q.grand)}</span>
+            <button class="hi-del" onclick="event.stopPropagation();deleteQuote(${q.id})" title="Delete">&#128465;</button>
+          </span>
+        </div>
+        <div class="hi-cust">${q.custName||"(no name)"} &nbsp;·&nbsp; ${q.custType} &nbsp;·&nbsp; ${formatDate(new Date(q.date))}
+          ${q.sp?` &nbsp;·&nbsp; ${q.sp}`:""}</div>
+      </div>`
+    ).join("");
   }
+  document.getElementById("historyOverlay").classList.add("open");
 }
 
-// ── TOAST ──
-function showToast(msg) {
-  const t = document.getElementById("toast");
-  t.textContent = "✓ " + msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 1800);
+function loadQuote(id) {
+  const history = JSON.parse(localStorage.getItem("niksang_history")||"[]");
+  const q = history.find(h=>h.id===id);
+  if (!q) return;
+  quoteItems  = q.quoteItems;
+  miscItems   = q.miscItems||[];
+  quoteCounter = Math.max(...quoteItems.map(i=>i.id), 0);
+  miscCounter  = Math.max(...(miscItems.map(i=>i.id)||[0]), 0);
+  document.getElementById("quoteNo").value    = q.quoteNo;
+  document.getElementById("custName").value   = q.custName;
+  document.getElementById("custPhone").value  = q.custPhone||"";
+  document.getElementById("custType").value   = q.custType;
+  document.getElementById("overallDisc").value= q.overallDisc||0;
+  document.getElementById("wlWeight").value   = q.wlWeight||"";
+  document.getElementById("wlRate").value     = q.wlRate||"";
+  document.getElementById("wlLoading").value  = q.wlLoading||"";
+  updateQuoteMeta();
+  renderQuote();
+  renderMisc();
+  closeOverlay("historyOverlay");
+  showToast("Quote loaded!");
 }
 
-// ── IMPORT LOGIC ──
-let pendingProducts = null;
+function deleteQuote(id) {
+  if (!confirm("Delete this quote?")) return;
+  let history = JSON.parse(localStorage.getItem("niksang_history")||"[]");
+  history = history.filter(h=>h.id!==id);
+  localStorage.setItem("niksang_history", JSON.stringify(history));
+  openHistory();
+}
 
+// ══════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════
+function openLogin() { document.getElementById("loginOverlay").classList.add("open"); }
+
+function doLogin() {
+  const name = document.getElementById("loginName").value.trim();
+  const pin  = document.getElementById("loginPin").value.trim();
+  const err  = document.getElementById("loginErr");
+
+  if (!name) { err.textContent="Please enter your name."; err.style.display="block"; return; }
+  if (SALESPEOPLE[name] && SALESPEOPLE[name]!==pin) {
+    err.textContent="Incorrect PIN. Please try again."; err.style.display="block"; return;
+  }
+  err.style.display="none";
+  currentSP = name;
+  document.getElementById("spBadge").textContent = "👤 "+name;
+  document.getElementById("spBadge").style.display="inline-block";
+  document.getElementById("metaSP").textContent = name;
+  document.getElementById("loginBtn").style.display="none";
+  document.getElementById("logoutBtn").style.display="inline-flex";
+  closeOverlay("loginOverlay");
+  showToast("Logged in as "+name);
+}
+
+function logout() {
+  currentSP = null;
+  document.getElementById("spBadge").style.display="none";
+  document.getElementById("metaSP").textContent = "—";
+  document.getElementById("loginBtn").style.display="inline-flex";
+  document.getElementById("logoutBtn").style.display="none";
+  document.getElementById("loginName").value="";
+  document.getElementById("loginPin").value="";
+  showToast("Logged out");
+}
+
+// ══════════════════════════════════════════════════
+// LOGO
+// ══════════════════════════════════════════════════
+function openLogoUpload() { document.getElementById("logoOverlay").classList.add("open"); }
+
+function loadLogo(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    applyLogo(e.target.result);
+    localStorage.setItem("niksang_logo", e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyLogo(dataURL) {
+  logoDataURL = dataURL;
+  const hdr = document.getElementById("headerLogo");
+  hdr.src = dataURL; hdr.classList.add("visible");
+  const prev = document.getElementById("logoPreview");
+  prev.src = dataURL;
+  document.getElementById("logoPreviewWrap").style.display="block";
+  const pli = document.getElementById("printLogoImg");
+  pli.src = dataURL; pli.style.display="inline";
+}
+
+function removeLogo() {
+  logoDataURL = null;
+  localStorage.removeItem("niksang_logo");
+  const hdr = document.getElementById("headerLogo");
+  hdr.src=""; hdr.classList.remove("visible");
+  document.getElementById("logoPreviewWrap").style.display="none";
+  document.getElementById("printLogoImg").style.display="none";
+}
+
+// ══════════════════════════════════════════════════
+// DESIGN IMAGE
+// ══════════════════════════════════════════════════
+function loadDesignImage(input) {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    designDataURL = e.target.result;
+    const img = document.getElementById("designPreview");
+    img.src = e.target.result; img.classList.add("visible");
+    document.getElementById("removeImgBtn").classList.add("visible");
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeDesignImage() {
+  designDataURL = null;
+  const img = document.getElementById("designPreview");
+  img.src=""; img.classList.remove("visible");
+  document.getElementById("removeImgBtn").classList.remove("visible");
+}
+
+// ══════════════════════════════════════════════════
+// IMPORT
+// ══════════════════════════════════════════════════
 function openImport() {
+  document.getElementById("importStatus").className="import-status";
+  document.getElementById("importStatus").textContent="";
+  document.getElementById("confirmImportBtn").style.display="none";
+  document.getElementById("fileInput").value="";
+  pendingProducts=null;
   document.getElementById("importOverlay").classList.add("open");
-  document.getElementById("importStatus").className = "import-status";
-  document.getElementById("importStatus").textContent = "";
-  document.getElementById("confirmImportBtn").style.display = "none";
-  document.getElementById("fileInput").value = "";
-  pendingProducts = null;
-}
-function closeImport() {
-  document.getElementById("importOverlay").classList.remove("open");
 }
 
-function onDragOver(e) {
-  e.preventDefault();
-  document.getElementById("dropZone").classList.add("dragover");
-}
-function onDragLeave(e) {
-  document.getElementById("dropZone").classList.remove("dragover");
-}
-function onDrop(e) {
-  e.preventDefault();
-  document.getElementById("dropZone").classList.remove("dragover");
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
-}
+function onDragOver(e) { e.preventDefault(); document.getElementById("dropZone").classList.add("dragover"); }
+function onDragLeave() { document.getElementById("dropZone").classList.remove("dragover"); }
+function onDrop(e) { e.preventDefault(); document.getElementById("dropZone").classList.remove("dragover"); handleFile(e.dataTransfer.files[0]); }
 
 function handleFile(file) {
   if (!file) return;
   const status = document.getElementById("importStatus");
-  const confirmBtn = document.getElementById("confirmImportBtn");
-
+  const btn    = document.getElementById("confirmImportBtn");
   if (!file.name.match(/\.xlsx?$/i)) {
-    status.className = "import-status err";
-    status.textContent = "Please upload a valid .xlsx file.";
-    confirmBtn.style.display = "none";
-    return;
+    status.className="import-status err"; status.textContent="Please upload a valid .xlsx file."; btn.style.display="none"; return;
   }
-
-  status.className = "import-status";
-  status.textContent = "Reading file...";
-  status.style.display = "block";
+  status.className="import-status"; status.textContent="Reading…"; status.style.display="block";
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = e => {
     try {
-      const data = new Uint8Array(e.target.result);
-      const wb   = XLSX.read(data, { type: "array" });
-
-      // Find "Price List" sheet (case-insensitive)
-      const sheetName = wb.SheetNames.find(n => n.toLowerCase().replace(/\s/g,"") === "pricelist");
-      if (!sheetName) {
-        status.className = "import-status err";
-        status.textContent = 'Could not find a sheet named "Price List" in this file. Please use the Niksang Excel template.';
-        confirmBtn.style.display = "none";
-        return;
-      }
-
-      const ws   = wb.Sheets[sheetName];
-      // Read from row 4 (index 3), headers in row 3 ignored — we use fixed column positions
-      // Columns: B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8 (0-indexed after col A)
-      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, range: 3, defval: "" });
-
+      const wb  = XLSX.read(new Uint8Array(e.target.result), { type:"array" });
+      const sn  = wb.SheetNames.find(n=>n.toLowerCase().replace(/\s/g,"")=="pricelist");
+      if (!sn) { status.className="import-status err"; status.textContent='Sheet "Price List" not found.'; btn.style.display="none"; return; }
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header:1, range:3, defval:"" });
       const parsed = [];
-      for (const row of rows) {
-        const name = String(row[1] || "").trim();
-        if (!name) continue; // skip empty rows
-
-        const retail    = parseFloat(row[4]) || 0;
-        const trade     = parseFloat(row[5]) || 0;
-        const wholesale = parseFloat(row[6]) || 0;
-        const gst       = parseFloat(row[7]) || 18;
-        const category  = String(row[2] || "General").trim();
-        const unit      = String(row[3] || "Piece").trim();
-        const option    = String(row[8] || "").trim();
-
-        parsed.push({ name, category, unit, retail, trade, wholesale, gst, option });
+      for (const r of rows) {
+        const name = String(r[1]||"").trim();
+        if (!name) continue;
+        parsed.push({
+          name, category:String(r[2]||"General").trim(), unit:String(r[3]||"Piece").trim(),
+          retail:parseFloat(r[4])||0, trade:parseFloat(r[5])||0, wholesale:parseFloat(r[6])||0,
+          gst:parseFloat(r[7])||18, option:String(r[8]||"").trim(),
+          stock: r[9]!==""&&r[9]!==undefined ? parseFloat(r[9]) : null,
+        });
       }
-
-      if (parsed.length === 0) {
-        status.className = "import-status err";
-        status.textContent = "No products found. Make sure your Price List sheet has data from row 4 onwards.";
-        confirmBtn.style.display = "none";
-        return;
-      }
-
-      pendingProducts = parsed;
-      status.className = "import-status ok";
-      status.textContent = `Found ${parsed.length} product(s) across ${[...new Set(parsed.map(p=>p.category))].length} categories. Click "Load Products" to apply.`;
-      confirmBtn.style.display = "inline-block";
-
-    } catch(err) {
-      status.className = "import-status err";
-      status.textContent = "Error reading file: " + err.message;
-      confirmBtn.style.display = "none";
-    }
+      if (!parsed.length) { status.className="import-status err"; status.textContent="No products found from row 4 onwards."; btn.style.display="none"; return; }
+      pendingProducts=parsed;
+      status.className="import-status ok";
+      status.textContent=`Found ${parsed.length} products across ${[...new Set(parsed.map(p=>p.category))].length} categories. Click "Load Products" to apply.`;
+      btn.style.display="inline-block";
+    } catch(err) { status.className="import-status err"; status.textContent="Error: "+err.message; btn.style.display="none"; }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function confirmImport() {
-  if (!pendingProducts || pendingProducts.length === 0) return;
-
-  // Replace global PRODUCTS array
-  PRODUCTS.length = 0;
-  pendingProducts.forEach(p => PRODUCTS.push(p));
-
-  // Reset UI
-  activeCategory = "All";
+  if (!pendingProducts||!pendingProducts.length) return;
+  PRODUCTS.length=0;
+  pendingProducts.forEach(p=>PRODUCTS.push(p));
+  activeCategory="All";
   buildCategoryPills();
   filterProducts();
+  closeOverlay("importOverlay");
+  showToast(`${PRODUCTS.length} products loaded!`);
+  pendingProducts=null;
+}
 
-  closeImport();
-  showToast(`${PRODUCTS.length} products loaded from Excel!`);
-  pendingProducts = null;
+// ══════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════
+function closeOverlay(id) { document.getElementById(id).classList.remove("open"); }
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent="✓ "+msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2000);
 }
 
 init();
