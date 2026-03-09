@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Niksang — Quotation System</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Montserrat:wght@500&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
@@ -18,7 +18,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--paper);color:var(--ink);m
 
 /* HEADER */
 header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100;}
-.logo{font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--paper);letter-spacing:.04em;display:flex;align-items:center;gap:.6rem;}
+.logo{font-family:'Montserrat',sans-serif;font-size:1.4rem;font-weight:500;color:var(--paper);letter-spacing:.18em;text-transform:uppercase;display:flex;align-items:center;gap:.6rem;}
 .logo span{color:var(--gold);}
 .logo-img{height:36px;width:36px;border-radius:6px;object-fit:contain;background:rgba(255,255,255,.1);display:none;}
 .logo-img.visible{display:block;}
@@ -231,7 +231,7 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
 }
 .print-logo{display:none;align-items:center;gap:.75rem;margin-bottom:1.5rem;}
 .print-logo img{height:60px;border-radius:6px;object-fit:contain;}
-.print-logo-text{font-family:'DM Serif Display',serif;font-size:1.8rem;}
+.print-logo-text{font-family:'Montserrat',sans-serif;font-weight:500;font-size:1.8rem;letter-spacing:.18em;text-transform:uppercase;}
 </style>
 </head>
 <body>
@@ -240,7 +240,7 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
 <header>
   <div class="logo">
     <img class="logo-img" id="headerLogo" src="" alt="Logo"/>
-    Nik<span>sang</span>
+    NIKSANG
   </div>
   <div class="header-right">
     <span class="sp-badge" id="spBadge" style="display:none"></span>
@@ -456,7 +456,7 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
     </div>
     <div class="col-map">
       <strong>Price List sheet columns (row 4 onwards):</strong><br>
-      B: Name &nbsp;·&nbsp; C: Category &nbsp;·&nbsp; D: Unit &nbsp;·&nbsp; E: Retail &nbsp;·&nbsp; F: Trade &nbsp;·&nbsp; G: Wholesale &nbsp;·&nbsp; H: GST% &nbsp;·&nbsp; I: Option &nbsp;·&nbsp; <strong>J: Stock Qty</strong>
+      B: Name &nbsp;·&nbsp; C: Category &nbsp;·&nbsp; D: Unit &nbsp;·&nbsp; E: Retail &nbsp;·&nbsp; F: Trade &nbsp;·&nbsp; G: Wholesale &nbsp;·&nbsp; H: GST% &nbsp;·&nbsp; I: Option &nbsp;·&nbsp; <strong>K: Stock Qty</strong>
     </div>
     <div class="import-status" id="importStatus"></div>
     <div class="modal-actions">
@@ -639,8 +639,7 @@ function filterProducts() {
       }
     }
     return `
-      <div class="product-card ${isOut?"out-of-stock":""}"
-           onclick="${isOut?"showToast('Out of stock')":("addProduct("+JSON.stringify(p)+")")}">
+      <div class="product-card" onclick='addProduct(${JSON.stringify(p)})'>
         <div style="flex:1;min-width:0">
           <div class="pname">${highlight(p.name, q)}</div>
           <div class="pmeta">
@@ -652,7 +651,7 @@ function filterProducts() {
         </div>
         <div style="display:flex;align-items:center;gap:.35rem;flex-shrink:0">
           <span class="pprice">${fmt(price)}</span>
-          <button class="add-btn" title="Add to quote" ${isOut?"disabled":""}>+</button>
+          <button class="add-btn" title="Add to quote">+</button>
         </div>
       </div>`;
   }).join("");
@@ -676,7 +675,12 @@ function addProduct(p) {
     qty:1, disc:0,
   });
   renderQuote();
-  showToast(`"${p.name}" added`);
+  const stockNum = (p.stock === null || p.stock === undefined) ? null : Number(p.stock);
+  if (stockNum !== null && stockNum <= 0) {
+    showToast(`⚠️ "${p.name}" added — currently out of stock`, true);
+  } else {
+    showToast(`"${p.name}" added`);
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -1078,7 +1082,7 @@ function handleFile(file) {
           name, category:String(r[2]||"General").trim(), unit:String(r[3]||"Piece").trim(),
           retail:parseFloat(r[4])||0, trade:parseFloat(r[5])||0, wholesale:parseFloat(r[6])||0,
           gst:parseFloat(r[7])||18, option:String(r[8]||"").trim(),
-          stock: r[9]!==""&&r[9]!==undefined ? parseFloat(r[9]) : null,
+          stock: r[10]!==""&&r[10]!==undefined ? parseFloat(r[10]) : null,
         });
       }
       if (!parsed.length) { status.className="import-status err"; status.textContent="No products found from row 4 onwards."; btn.style.display="none"; return; }
@@ -1108,10 +1112,12 @@ function confirmImport() {
 // ══════════════════════════════════════════════════
 function closeOverlay(id) { document.getElementById(id).classList.remove("open"); }
 
-function showToast(msg) {
+function showToast(msg, isWarning) {
   const t = document.getElementById("toast");
-  t.textContent="✓ "+msg; t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"), 2000);
+  t.textContent = (isWarning ? "" : "✓ ") + msg;
+  t.style.background = isWarning ? "var(--warn)" : "var(--success)";
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"), 2800);
 }
 
 init();
