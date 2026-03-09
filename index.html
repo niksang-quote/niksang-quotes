@@ -218,7 +218,8 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
 .toast.show{opacity:1;transform:translateY(0);}
 
 /* PRINT */
-@media print {
+.qty-print{display:none;font-size:.88rem;font-weight:500;text-align:center;}
+@media print{.qty-ctrl{display:none!important;}.qty-print{display:block!important;}}
   header,.left-panel,.quote-actions,.qty-ctrl,.disc-input,.del-btn,
   .add-misc-btn,.img-upload-btn,.remove-img-btn,.hbtn,
   .wl-input,.design-img-zone .img-upload-btn { display:none!important; }
@@ -712,7 +713,8 @@ function renderQuote() {
         <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
         <input class="qty-input" type="number" min="1" value="${item.qty}" onchange="setQty(${item.id},this.value)"/>
         <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
-      </div></td>
+      </div>
+      <div class="qty-print">${item.qty}</div></td>
       <td>${fmt(up)}</td>
       <td><input class="disc-input" type="number" min="0" max="100" step="0.5" value="${item.disc}" onchange="setDisc(${item.id},this.value)"/>%</td>
       <td>${fmt(amt)}</td>
