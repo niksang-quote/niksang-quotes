@@ -145,11 +145,12 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
 
 /* DESIGN IMAGE */
 .design-img-zone{padding:1rem 1.25rem;}
+.design-img-slot{display:flex;flex-direction:column;gap:.4rem;flex:1;min-width:160px;max-width:33%;}
 .img-upload-btn{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border:1.5px dashed var(--rule);border-radius:8px;background:var(--paper);cursor:pointer;font-family:inherit;font-size:.82rem;color:var(--muted);transition:all .15s;}
 .img-upload-btn:hover{border-color:var(--accent2);color:var(--accent2);}
-.design-preview{max-width:100%;max-height:280px;border-radius:8px;border:1px solid var(--rule);margin-top:.6rem;display:none;}
+.design-preview{width:100%;max-height:180px;object-fit:contain;border-radius:8px;border:1px solid var(--rule);display:none;}
 .design-preview.visible{display:block;}
-.remove-img-btn{background:none;border:none;font-size:.78rem;color:var(--accent);cursor:pointer;margin-top:.3rem;display:none;font-family:inherit;}
+.remove-img-btn{background:none;border:none;font-size:.78rem;color:var(--accent);cursor:pointer;font-family:inherit;display:none;}
 .remove-img-btn.visible{display:inline-block;}
 
 /* TOTALS */
@@ -406,14 +407,25 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
 
     <!-- Design Image -->
     <div class="quote-table-wrap">
-      <div class="section-label">Custom Design / Reference Image (Optional)</div>
+      <div class="section-label">Custom Design / Reference Images — up to 3 (Optional)</div>
       <div class="design-img-zone">
-        <label class="img-upload-btn">
-          &#128444; Click to upload design image
-          <input type="file" accept="image/*" style="display:none" onchange="loadDesignImage(this)"/>
-        </label>
-        <img class="design-preview" id="designPreview" src="" alt="Design"/>
-        <button class="remove-img-btn" id="removeImgBtn" onclick="removeDesignImage()">&#10005; Remove image</button>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;" id="designImgGrid">
+          <div class="design-img-slot" id="slot1">
+            <label class="img-upload-btn">&#128444; Image 1<input type="file" accept="image/*" style="display:none" onchange="loadDesignImage(this,1)"/></label>
+            <img class="design-preview" id="designPreview1" src="" alt="Design 1"/>
+            <button class="remove-img-btn" id="removeImgBtn1" onclick="removeDesignImage(1)">&#10005; Remove</button>
+          </div>
+          <div class="design-img-slot" id="slot2">
+            <label class="img-upload-btn">&#128444; Image 2<input type="file" accept="image/*" style="display:none" onchange="loadDesignImage(this,2)"/></label>
+            <img class="design-preview" id="designPreview2" src="" alt="Design 2"/>
+            <button class="remove-img-btn" id="removeImgBtn2" onclick="removeDesignImage(2)">&#10005; Remove</button>
+          </div>
+          <div class="design-img-slot" id="slot3">
+            <label class="img-upload-btn">&#128444; Image 3<input type="file" accept="image/*" style="display:none" onchange="loadDesignImage(this,3)"/></label>
+            <img class="design-preview" id="designPreview3" src="" alt="Design 3"/>
+            <button class="remove-img-btn" id="removeImgBtn3" onclick="removeDesignImage(3)">&#10005; Remove</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -559,7 +571,6 @@ let quoteCounter   = 0;
 let miscCounter    = 0;
 let currentSP      = null;
 let logoDataURL    = null;
-let designDataURL  = null;
 let pendingProducts = null;
 
 // ══════════════════════════════════════════════════
@@ -799,7 +810,7 @@ function clearQuote() {
   document.getElementById("wlWeight").value="";
   document.getElementById("wlRate").value="";
   document.getElementById("wlLoading").value="";
-  removeDesignImage();
+  [1,2,3].forEach(s => removeDesignImage(s));
 }
 
 // ══════════════════════════════════════════════════
@@ -1024,25 +1035,27 @@ function removeLogo() {
 }
 
 // ══════════════════════════════════════════════════
-// DESIGN IMAGE
+// DESIGN IMAGES (up to 3)
 // ══════════════════════════════════════════════════
-function loadDesignImage(input) {
+let designImages = { 1: null, 2: null, 3: null };
+
+function loadDesignImage(input, slot) {
   const file = input.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    designDataURL = e.target.result;
-    const img = document.getElementById("designPreview");
+    designImages[slot] = e.target.result;
+    const img = document.getElementById("designPreview"+slot);
     img.src = e.target.result; img.classList.add("visible");
-    document.getElementById("removeImgBtn").classList.add("visible");
+    document.getElementById("removeImgBtn"+slot).classList.add("visible");
   };
   reader.readAsDataURL(file);
 }
 
-function removeDesignImage() {
-  designDataURL = null;
-  const img = document.getElementById("designPreview");
+function removeDesignImage(slot) {
+  designImages[slot] = null;
+  const img = document.getElementById("designPreview"+slot);
   img.src=""; img.classList.remove("visible");
-  document.getElementById("removeImgBtn").classList.remove("visible");
+  document.getElementById("removeImgBtn"+slot).classList.remove("visible");
 }
 
 // ══════════════════════════════════════════════════
