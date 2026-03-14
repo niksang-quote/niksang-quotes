@@ -218,6 +218,13 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
 .toast{position:fixed;bottom:1.25rem;right:1.25rem;background:var(--success);color:white;padding:.6rem 1.1rem;border-radius:8px;font-size:.83rem;font-weight:500;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(10px);transition:all .2s;pointer-events:none;z-index:999;}
 .toast.show{opacity:1;transform:translateY(0);}
 
+.advance-row{display:flex;align-items:center;gap:.6rem;padding:.5rem 1.25rem;border-bottom:1px solid var(--cream);}
+.advance-row input{border:1.5px solid var(--rule);border-radius:6px;padding:.35rem .6rem;font-family:inherit;font-size:.83rem;background:var(--paper);}
+.advance-row input:focus{outline:none;border-color:var(--accent2);}
+.advance-row .adv-date{width:140px;}
+.advance-row .adv-note{flex:1;min-width:100px;}
+.advance-row .adv-amt{width:120px;text-align:right;}
+
 /* PRINT */
 .qty-print{display:none;font-size:.88rem;font-weight:500;text-align:center;}
 @media print{
@@ -291,6 +298,10 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
           <label>Valid Until</label>
           <input type="date" id="validUntil" oninput="updateQuoteMeta()"/>
         </div>
+        <div class="field-group full">
+          <label>Expected Delivery Date</label>
+          <input type="date" id="deliveryDate" oninput="updateQuoteMeta()"/>
+        </div>
       </div>
     </div>
 
@@ -336,7 +347,9 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
       <div class="qmeta-item"><span class="qmeta-label">Date</span><span class="qmeta-val" id="metaDate">—</span></div>
       <div class="qmeta-item"><span class="qmeta-label">Valid Until</span><span class="qmeta-val" id="metaValid">—</span></div>
       <div class="qmeta-item"><span class="qmeta-label">Customer</span><span class="qmeta-val" id="metaCust">—</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Phone</span><span class="qmeta-val" id="metaPhone">—</span></div>
       <div class="qmeta-item"><span class="qmeta-label">Tier</span><span class="qmeta-val" id="metaTier">Retail</span></div>
+      <div class="qmeta-item"><span class="qmeta-label">Delivery Date</span><span class="qmeta-val" id="metaDelivery">—</span></div>
       <div class="qmeta-item"><span class="qmeta-label">Salesperson</span><span class="qmeta-val" id="metaSP">—</span></div>
       <div class="qmeta-item"><span class="qmeta-label">Items</span><span class="qmeta-val" id="metaItems">0</span></div>
     </div>
@@ -437,6 +450,20 @@ header{background:var(--ink);padding:0 1.5rem;display:flex;align-items:center;ju
       <div class="tot-row"><span class="tot-label">Miscellaneous Charges</span><span class="tot-val" id="totMisc">&#8377; 0.00</span></div>
       <div class="tot-row"><span class="tot-label">Total GST</span><span class="tot-val" id="totGST">&#8377; 0.00</span></div>
       <div class="tot-row grand"><span class="tot-label">Grand Total (incl. GST)</span><span class="tot-val" id="totGrand">&#8377; 0.00</span></div>
+    </div>
+
+    <!-- Advance Payments -->
+    <div class="totals-grid" style="margin-bottom:1rem;">
+      <div class="tot-row" style="background:var(--cream)">
+        <span class="tot-label" style="font-weight:600;color:var(--ink)">Advance Payments</span>
+        <button class="btn btn-outline" style="font-size:.75rem;padding:.3rem .75rem" onclick="addAdvance()">+ Add Advance</button>
+      </div>
+      <div id="advanceRows"></div>
+      <div class="tot-row"><span class="tot-label">Total Advances Received</span><span class="tot-val" id="totAdvance" style="color:var(--success)">&#8377; 0.00</span></div>
+      <div class="tot-row" style="background:#fff8e7">
+        <span class="tot-label" style="font-weight:600;color:var(--ink)">Balance Due</span>
+        <span class="tot-val" id="totBalance" style="color:var(--accent);font-size:1rem;font-weight:700">&#8377; 0.00</span>
+      </div>
     </div>
 
     <!-- T&C -->
@@ -806,16 +833,52 @@ function setDisc(id, val) {
 function removeItem(id) { quoteItems=quoteItems.filter(i=>i.id!==id); renderQuote(); }
 function clearQuote() {
   if ((quoteItems.length||miscItems.length) && !confirm("Clear all items?")) return;
-  quoteItems=[]; miscItems=[]; renderQuote(); renderMisc();
+  quoteItems=[]; miscItems=[]; advances=[]; renderQuote(); renderMisc(); renderAdvances();
   document.getElementById("wlWeight").value="";
   document.getElementById("wlRate").value="";
   document.getElementById("wlLoading").value="";
+  document.getElementById("deliveryDate").value="";
+  updateQuoteMeta();
   [1,2,3].forEach(s => removeDesignImage(s));
 }
 
 // ══════════════════════════════════════════════════
-// RECALC TOTALS
+// ADVANCE PAYMENTS
 // ══════════════════════════════════════════════════
+let advances = [];
+let advCounter = 0;
+
+function addAdvance() {
+  advCounter++;
+  const today = new Date().toISOString().split("T")[0];
+  advances.push({ id: advCounter, date: today, note: "", amount: 0 });
+  renderAdvances();
+}
+
+function renderAdvances() {
+  const container = document.getElementById("advanceRows");
+  if (advances.length === 0) { container.innerHTML = ""; recalcTotals(); return; }
+  container.innerHTML = advances.map(a => `
+    <div class="advance-row">
+      <input class="adv-date" type="date" value="${a.date}" onchange="setAdvField(${a.id},'date',this.value)"/>
+      <input class="adv-note" type="text" placeholder="Note (e.g. Cheque / NEFT / Cash)" value="${a.note}" oninput="setAdvField(${a.id},'note',this.value)"/>
+      <input class="adv-amt" type="number" min="0" placeholder="Amount" value="${a.amount||""}" oninput="setAdvField(${a.id},'amount',parseFloat(this.value)||0)"/>
+      <button class="del-btn" onclick="removeAdvance(${a.id})">✕</button>
+    </div>`
+  ).join("");
+  recalcTotals();
+}
+
+function setAdvField(id, field, val) {
+  const a = advances.find(i=>i.id===id);
+  if (a) { a[field]=val; recalcTotals(); }
+}
+function removeAdvance(id) {
+  advances = advances.filter(i=>i.id!==id);
+  renderAdvances();
+}
+
+
 function recalcTotals() {
   const tier     = document.getElementById("custType").value;
   const overDisc = parseFloat(document.getElementById("overallDisc").value)||0;
@@ -843,6 +906,8 @@ function recalcTotals() {
   gstTotal += miscGST;
 
   const grand = subtotal - discAmt + wlTotal + miscTotal + gstTotal;
+  const totalAdvance = advances.reduce((s,a) => s + (parseFloat(a.amount)||0), 0);
+  const balance = grand - totalAdvance;
 
   document.getElementById("totSubtotal").textContent = fmt(subtotal);
   document.getElementById("totDiscount").textContent = `- ${fmt(discAmt)}`;
@@ -852,6 +917,8 @@ function recalcTotals() {
   document.getElementById("totGrand").textContent    = fmt(grand);
   document.getElementById("wlWeightCharge").textContent = fmt(wlCharge);
   document.getElementById("wlTotal").textContent        = fmt(wlTotal);
+  document.getElementById("totAdvance").textContent  = fmt(totalAdvance);
+  document.getElementById("totBalance").textContent  = fmt(balance);
 }
 
 function refreshQuotePrices() { renderQuote(); filterProducts(); }
@@ -861,13 +928,18 @@ function refreshQuotePrices() { renderQuote(); filterProducts(); }
 // ══════════════════════════════════════════════════
 function updateQuoteMeta() {
   const name  = document.getElementById("custName").value||"—";
+  const phone = document.getElementById("custPhone").value||"—";
   const qno   = document.getElementById("quoteNo").value||"—";
   const valid = document.getElementById("validUntil").value;
+  const deliv = document.getElementById("deliveryDate").value;
   const tier  = document.getElementById("custType");
   document.getElementById("metaCust").textContent    = name;
+  document.getElementById("metaPhone").textContent   = phone;
   document.getElementById("metaQuoteNo").textContent = qno;
   document.getElementById("metaTier").textContent    = tier.options[tier.selectedIndex].text;
-  if (valid) document.getElementById("metaValid").textContent = formatDate(new Date(valid+"T00:00:00"));
+  if (valid) document.getElementById("metaValid").textContent    = formatDate(new Date(valid+"T00:00:00"));
+  if (deliv) document.getElementById("metaDelivery").textContent = formatDate(new Date(deliv+"T00:00:00"));
+  else document.getElementById("metaDelivery").textContent = "—";
 }
 
 // ══════════════════════════════════════════════════
@@ -896,10 +968,12 @@ function saveQuote() {
     grand:     grand,
     quoteItems:  JSON.parse(JSON.stringify(quoteItems)),
     miscItems:   JSON.parse(JSON.stringify(miscItems)),
+    advances:    JSON.parse(JSON.stringify(advances)),
     overallDisc: parseFloat(document.getElementById("overallDisc").value)||0,
     wlWeight:  document.getElementById("wlWeight").value,
     wlRate:    document.getElementById("wlRate").value,
     wlLoading: document.getElementById("wlLoading").value,
+    deliveryDate: document.getElementById("deliveryDate").value,
   };
 
   const history = JSON.parse(localStorage.getItem("niksang_history")||"[]");
@@ -938,8 +1012,10 @@ function loadQuote(id) {
   if (!q) return;
   quoteItems  = q.quoteItems;
   miscItems   = q.miscItems||[];
+  advances    = q.advances||[];
   quoteCounter = Math.max(...quoteItems.map(i=>i.id), 0);
   miscCounter  = Math.max(...(miscItems.map(i=>i.id)||[0]), 0);
+  advCounter   = Math.max(...(advances.map(i=>i.id)||[0]), 0);
   document.getElementById("quoteNo").value    = q.quoteNo;
   document.getElementById("custName").value   = q.custName;
   document.getElementById("custPhone").value  = q.custPhone||"";
@@ -948,9 +1024,11 @@ function loadQuote(id) {
   document.getElementById("wlWeight").value   = q.wlWeight||"";
   document.getElementById("wlRate").value     = q.wlRate||"";
   document.getElementById("wlLoading").value  = q.wlLoading||"";
+  document.getElementById("deliveryDate").value = q.deliveryDate||"";
   updateQuoteMeta();
   renderQuote();
   renderMisc();
+  renderAdvances();
   closeOverlay("historyOverlay");
   showToast("Quote loaded!");
 }
